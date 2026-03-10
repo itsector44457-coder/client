@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+:root {
+  color-scheme: light;
+  --app-bg: #f4f6fb;
+  --panel-bg: #ffffff;
+  --muted-bg: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+  --border-color: #e2e8f0;
+  --input-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: #ffffff;
+  --stat-bg: #ffffff;
+  --nav-text: #64748b;
+  --nav-hover-bg: #f1f5ff;
+  --nav-hover-text: #4f46e5;
+  --nav-active-start: #eef2ff;
+  --nav-active-end: #e0e7ff;
+  --nav-active-text: #4338ca;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #020617;
+  --panel-bg: #0f172a;
+  --muted-bg: #111827;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-soft: #64748b;
+  --border-color: #334155;
+  --input-bg: #0b1220;
+  --sidebar-bg: #0b1220;
+  --topbar-bg: #0b1220;
+  --stat-bg: #111827;
+  --nav-text: #94a3b8;
+  --nav-hover-bg: #1e293b;
+  --nav-hover-text: #c7d2fe;
+  --nav-active-start: #1e1b4b;
+  --nav-active-end: #1e293b;
+  --nav-active-text: #e0e7ff;
+}
+
+html[data-theme="midnight"] {
+  color-scheme: dark;
+  --app-bg: #030712;
+  --panel-bg: #111827;
+  --muted-bg: #0f172a;
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --text-soft: #6b7280;
+  --border-color: #374151;
+  --input-bg: #0b1220;
+  --sidebar-bg: #0b1220;
+  --topbar-bg: #0b1220;
+  --stat-bg: #111827;
+  --nav-text: #9ca3af;
+  --nav-hover-bg: #1f2937;
+  --nav-hover-text: #a5b4fc;
+  --nav-active-start: #312e81;
+  --nav-active-end: #1f2937;
+  --nav-active-text: #e0e7ff;
+}
+
+html[data-theme="ocean"] {
+  color-scheme: dark;
+  --app-bg: #031b28;
+  --panel-bg: #0a2433;
+  --muted-bg: #0d3145;
+  --text-main: #dbeafe;
+  --text-muted: #93c5fd;
+  --text-soft: #60a5fa;
+  --border-color: #1e3a5f;
+  --input-bg: #072031;
+  --sidebar-bg: #072031;
+  --topbar-bg: #082737;
+  --stat-bg: #0d3145;
+  --nav-text: #93c5fd;
+  --nav-hover-bg: #10374d;
+  --nav-hover-text: #67e8f9;
+  --nav-active-start: #164e63;
+  --nav-active-end: #0e7490;
+  --nav-active-text: #ecfeff;
+}
+
+html[data-theme="forest"] {
+  color-scheme: dark;
+  --app-bg: #071a13;
+  --panel-bg: #0d241b;
+  --muted-bg: #123226;
+  --text-main: #dcfce7;
+  --text-muted: #86efac;
+  --text-soft: #4ade80;
+  --border-color: #1f4d3a;
+  --input-bg: #0b2018;
+  --sidebar-bg: #0b2018;
+  --topbar-bg: #0e2a20;
+  --stat-bg: #123226;
+  --nav-text: #86efac;
+  --nav-hover-bg: #1a3b2e;
+  --nav-hover-text: #bbf7d0;
+  --nav-active-start: #166534;
+  --nav-active-end: #14532d;
+  --nav-active-text: #ecfdf5;
+}
+
+html[data-theme="sunset"] {
+  color-scheme: light;
+  --app-bg: #fff7ed;
+  --panel-bg: #fffaf5;
+  --muted-bg: #ffedd5;
+  --text-main: #7c2d12;
+  --text-muted: #9a3412;
+  --text-soft: #c2410c;
+  --border-color: #fed7aa;
+  --input-bg: #fffaf5;
+  --sidebar-bg: #fffaf5;
+  --topbar-bg: #fffaf5;
+  --stat-bg: #fffaf5;
+  --nav-text: #9a3412;
+  --nav-hover-bg: #ffedd5;
+  --nav-hover-text: #ea580c;
+  --nav-active-start: #fed7aa;
+  --nav-active-end: #fdba74;
+  --nav-active-text: #7c2d12;
+}
+
+html[data-theme="rose"] {
+  color-scheme: light;
+  --app-bg: #fff1f2;
+  --panel-bg: #fff8f9;
+  --muted-bg: #ffe4e6;
+  --text-main: #831843;
+  --text-muted: #9f1239;
+  --text-soft: #be123c;
+  --border-color: #fecdd3;
+  --input-bg: #fff8f9;
+  --sidebar-bg: #fff8f9;
+  --topbar-bg: #fff8f9;
+  --stat-bg: #fff8f9;
+  --nav-text: #9f1239;
+  --nav-hover-bg: #ffe4e6;
+  --nav-hover-text: #e11d48;
+  --nav-active-start: #fecdd3;
+  --nav-active-end: #fda4af;
+  --nav-active-text: #831843;
+}
+
+.app-theme {
+  background: var(--app-bg);
+  color: var(--text-main);
+}
+
+.app-theme .bg-white {
+  background-color: var(--panel-bg) !important;
+}
+
+.app-theme .bg-slate-50,
+.app-theme .bg-slate-100 {
+  background-color: var(--muted-bg) !important;
+}
+
+.app-theme .text-slate-900,
+.app-theme .text-slate-800,
+.app-theme .text-slate-700 {
+  color: var(--text-main) !important;
+}
+
+.app-theme .text-slate-600,
+.app-theme .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+.app-theme .text-slate-400,
+.app-theme .text-slate-300 {
+  color: var(--text-soft) !important;
+}
+
+.app-theme .border,
+.app-theme .border-slate-50,
+.app-theme .border-slate-100,
+.app-theme .border-slate-200,
+.app-theme .border-slate-300 {
+  border-color: var(--border-color) !important;
+}
+
+.app-theme input,
+.app-theme select,
+.app-theme textarea {
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.app-theme .sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right-color: var(--border-color) !important;
+}
+
+.app-theme .topbar {
+  background: var(--topbar-bg) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+.app-theme .stat-pill {
+  background: var(--stat-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+.app-theme .nav-btn {
+  color: var(--nav-text) !important;
+}
+
+.app-theme .nav-btn:hover {
+  background: var(--nav-hover-bg) !important;
+  color: var(--nav-hover-text) !important;
+}
+
+.app-theme .nav-btn.active {
+  background: linear-gradient(
+    135deg,
+    var(--nav-active-start),
+    var(--nav-active-end)
+  ) !important;
+  color: var(--nav-active-text) !important;
+}
+
+.app-theme .bg-\[\#f4f6fb\] {
+  background-color: var(--app-bg) !important;
+}
