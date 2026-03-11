@@ -32,7 +32,9 @@ const Network = ({
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`);
+      const res = await axios.get(
+        `https://backend-6hhv.onrender.com/api/users`,
+      );
 
       const others = res.data.filter(
         (u) => String(u._id || u.id) !== String(myId),
@@ -56,7 +58,7 @@ const Network = ({
   const handleFollow = async (targetId) => {
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/users/${targetId}/follow`,
+        `https://backend-6hhv.onrender.com/api/users/${targetId}/follow`,
         { currentUserId: myId },
       );
 

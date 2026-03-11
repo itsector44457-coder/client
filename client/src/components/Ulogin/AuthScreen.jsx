@@ -12,8 +12,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const API_URL = "${import.meta.env.VITE_API_URL}/api/auth";
-const ADMIN_API_URL = "${import.meta.env.VITE_API_URL}/api/admin";
+const API_URL = `https://backend-6hhv.onrender.com/api/auth`;
+const ADMIN_API_URL = `https://backend-6hhv.onrender.com/api/admin`;
 
 const AuthScreen = ({ onLoginSuccess }) => {
   const navigate = useNavigate();

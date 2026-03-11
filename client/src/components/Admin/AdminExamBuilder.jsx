@@ -50,7 +50,7 @@ const AdminExamBuilder = () => {
     const fetchFields = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/admin/fields`,
+          `https://backend-6hhv.onrender.com/api/admin/fields`,
         );
         setFields(res.data);
       } catch (err) {
@@ -103,7 +103,7 @@ const AdminExamBuilder = () => {
     setIsAIExtracting(true);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/admin/extract-ai`,
+        `https://backend-6hhv.onrender.com/api/admin/extract-ai`,
         {
           rawText: rawAIText,
         },
@@ -163,7 +163,7 @@ const AdminExamBuilder = () => {
         explanation: q.explanation,
       }));
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/admin/fields/${examDetails.fieldId}/exams`,
+        `https://backend-6hhv.onrender.com/api/admin/fields/${examDetails.fieldId}/exams`,
         { ...examDetails, questions: formattedQuestions },
         { headers: { adminid: adminId } },
       );

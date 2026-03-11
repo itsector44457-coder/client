@@ -8,7 +8,7 @@ import ProfileInfo from "./ProfileInfo";
 import ProfileGrid from "./ProfileGrid";
 import PostModal from "./PostModal";
 
-const socket = io(`${import.meta.env.VITE_API_URL}`);
+const socket = io(`https://backend-6hhv.onrender.com`);
 
 const NetworkProfile = ({ userId, onBack, currentUserId }) => {
   const [user, setUser] = useState(null);
@@ -26,8 +26,10 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
       try {
         setLoading(true);
         const [uRes, pRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/api/users/${userId}`),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/posts/user/${userId}`),
+          axios.get(`https://backend-6hhv.onrender.com/api/users/${userId}`),
+          axios.get(
+            `https://backend-6hhv.onrender.com/api/posts/user/${userId}`,
+          ),
         ]);
         setUser(uRes.data);
         setPosts(pRes.data || []);
@@ -48,7 +50,7 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
   const handleFollowToggle = async () => {
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/users/${userId}/follow`,
+        `https://backend-6hhv.onrender.com/api/users/${userId}/follow`,
         { currentUserId },
       );
       setIsFollowing(res.data.isFollowing);
@@ -70,7 +72,7 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
   const handleLike = async (postId) => {
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/posts/like/${postId}`,
+        `https://backend-6hhv.onrender.com/api/posts/like/${postId}`,
         { userId: currentUserId },
       );
       const updated = posts.map((p) =>

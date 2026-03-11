@@ -50,7 +50,7 @@ const StudyTimer = ({
       };
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/sessions/save`,
+        `https://backend-6hhv.onrender.com/api/sessions/save`,
         payload,
       );
 

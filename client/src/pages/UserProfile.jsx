@@ -43,10 +43,14 @@ const UserProfile = () => {
       try {
         // charo cheezein ek saath mangwa rahe hain
         const results = await Promise.allSettled([
-          axios.get(`${import.meta.env.VITE_API_URL}/api/posts/user/${myId}`),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/sessions/${myId}`),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/users/${myId}/saved`),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/battles/user/${myId}`), // 🔥 Battle logs API
+          axios.get(`https://backend-6hhv.onrender.com/api/posts/user/${myId}`),
+          axios.get(`https://backend-6hhv.onrender.com/api/sessions/${myId}`),
+          axios.get(
+            `https://backend-6hhv.onrender.com/api/users/${myId}/saved`,
+          ),
+          axios.get(
+            `https://backend-6hhv.onrender.com/api/battles/user/${myId}`,
+          ), // 🔥 Battle logs API
         ]);
 
         if (results[0].status === "fulfilled")
@@ -68,7 +72,7 @@ const UserProfile = () => {
 
         // Fresh User Data for stats
         const userRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/users/${myId}`,
+          `https://backend-6hhv.onrender.com/api/users/${myId}`,
         );
         setUser(userRes.data);
       } catch (err) {

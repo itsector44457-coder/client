@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import ResourceHeader from "./ResourceHeader";
 import ResourceVault from "../Syllabus/ResourceVault";
 
-const API_RESOURCES = `${import.meta.env.VITE_API_URL}/api/resources`;
+const API_RESOURCES = `https://backend-6hhv.onrender.com/api/resources`;
 
 const ResourcesPage = () => {
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");

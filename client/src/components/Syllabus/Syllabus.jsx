@@ -8,9 +8,9 @@ import ResourceVault from "../Syllabus/ResourceVault";
 import MockTest from "./MockTest";
 import TestHistoryModal from "./TestHistoryModal";
 
-const API_ROADMAP = `${import.meta.env.VITE_API_URL}/api/roadmap`;
-const API_RESOURCES = `${import.meta.env.VITE_API_URL}/api/resources`;
-const API_MOCK = `${import.meta.env.VITE_API_URL}/api/mock`;
+const API_ROADMAP = `https://backend-6hhv.onrender.com/api/roadmap`;
+const API_RESOURCES = `https://backend-6hhv.onrender.com/api/resources`;
+const API_MOCK = `https://backend-6hhv.onrender.com/api/mock`;
 
 const Syllabus = ({ myField = "" }) => {
   const [currentUser, setCurrentUser] = useState(() =>

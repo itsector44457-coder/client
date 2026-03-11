@@ -37,7 +37,9 @@ const Community = ({ myField }) => {
     try {
       setLoading(true);
       // Backend se saare posts le aao, filter hum UI par karenge
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/posts`);
+      const res = await axios.get(
+        `https://backend-6hhv.onrender.com/api/posts`,
+      );
       setPosts(res.data);
     } catch (err) {
       console.error("Link Sync Failed", err);
@@ -86,7 +88,7 @@ const Community = ({ myField }) => {
       };
 
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/posts/add`,
+        `https://backend-6hhv.onrender.com/api/posts/add`,
         postPayload,
       );
       setPosts((prev) => [res.data, ...prev]);
@@ -105,7 +107,7 @@ const Community = ({ myField }) => {
   const handleLike = async (postId) => {
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/posts/like/${postId}`,
+        `https://backend-6hhv.onrender.coms/api/posts/like/${postId}`,
         { userId: myId },
       );
       setPosts((prev) =>
@@ -123,7 +125,7 @@ const Community = ({ myField }) => {
     if (!text) return;
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/posts/${postId}/comment`,
+        `https://backend-6hhv.onrender.com/api/posts/${postId}/comment`,
         {
           userId: myId,
           userName: myName,

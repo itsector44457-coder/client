@@ -11,7 +11,7 @@ import QuickCaptureModal from "../Dashboard/QuickCaptureModal";
 import StudyTimer from "./StudyTimer";
 import BattleRequestModal from "../Battle/BattleRequestModal";
 
-const socket = io(`${import.meta.env.VITE_API_URL}`);
+const socket = io(`https://backend-6hhv.onrender.com`);
 
 const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   const navigate = useNavigate();
@@ -108,7 +108,7 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   const fetchActiveBattle = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/battles/active/${myId}`,
+        `https://backend-6hhv.onrender.com/api/battles/active/${myId}`,
       );
 
       setActiveBattle(res.data);
@@ -227,7 +227,7 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
                 battle={activeBattle}
                 onBattleLose={(data) =>
                   axios.put(
-                    `${import.meta.env.VITE_API_URL}/api/battles/${data.battleId}/lose`,
+                    `https://backend-6hhv.onrender.com/api/battles/${data.battleId}/lose`,
                     data,
                   )
                 }

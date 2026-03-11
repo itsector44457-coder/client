@@ -43,7 +43,7 @@ const BattleArena = () => {
     const fetchExams = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/user/exams?field=${userField}`,
+          `https://backend-6hhv.onrender.com/api/user/exams?field=${userField}`,
         );
         setExams(res.data);
       } catch (err) {
@@ -196,7 +196,7 @@ const BattleArena = () => {
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/users/combat-result`,
+        `https://backend-6hhv.onrender.com/api/users/combat-result`,
         {
           userId: user.id || user._id,
           examId: currentExam._id,
@@ -214,7 +214,7 @@ const BattleArena = () => {
     if (isCheatSubmit) {
       try {
         await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/users/mark-cheater`,
+          `https://backend-6hhv.onrender.com/api/users/mark-cheater`,
           {
             email: user.email,
           },

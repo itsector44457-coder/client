@@ -24,7 +24,7 @@ const NeuralWeaknesses = ({ onBack, currentUserId }) => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/users/${currentUserId}/weaknesses`,
+          `https://backend-6hhv.onrender.com/api/users/${currentUserId}/weaknesses`,
         );
         setWeaknesses(res.data || []);
         setError(null);

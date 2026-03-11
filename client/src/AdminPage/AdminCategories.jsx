@@ -25,7 +25,9 @@ const AdminCategories = () => {
 
   const fetchFields = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/fields`);
+      const res = await axios.get(
+        "https://backend-6hhv.onrender.com/api/fields",
+      );
       setFields(res.data);
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -43,7 +45,7 @@ const AdminCategories = () => {
     try {
       // Body matches your POST /admin/template route
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/fields/admin/template`,
+        "https://backend-6hhv.onrender.com/api/fields/admin/template",
         {
           adminId,
           field: newField,
@@ -66,7 +68,7 @@ const AdminCategories = () => {
       return alert("Details bharo bhai!");
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/fields/admin/subject`,
+        `https://backend-6hhv.onrender.com/api/fields/admin/subject`,
         {
           adminId,
           field: fieldName,

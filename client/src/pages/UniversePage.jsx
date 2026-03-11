@@ -53,7 +53,7 @@ const UniversePage = ({ myField }) => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/posts`,
+          `https://backend-6hhv.onrender.com/api/posts`,
         );
         const allPosts = res.data || [];
         setTotalPosts(allPosts.length);

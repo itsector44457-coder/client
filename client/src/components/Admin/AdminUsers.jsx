@@ -12,7 +12,7 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/admin/users`,
+        `https://backend-6hhv.onrender.com/api/admin/users`,
         {
           headers: { adminid: adminId },
         },
@@ -37,7 +37,7 @@ const AdminUsers = () => {
     ) {
       try {
         await axios.delete(
-          `${import.meta.env.VITE_API_URL}/api/admin/users/${targetId}`,
+          `https://backend-6hhv.onrender.com/api/admin/users/${targetId}`,
           {
             headers: { adminid: adminId },
           },
