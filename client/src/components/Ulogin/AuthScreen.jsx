@@ -12,8 +12,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5000/api/auth";
-const ADMIN_API_URL = "http://localhost:5000/api/admin";
+const API_URL = "import.meta.env.VITE_API_URL/api/auth";
+const ADMIN_API_URL = "import.meta.env.VITE_API_URL/api/admin";
 
 const AuthScreen = ({ onLoginSuccess }) => {
   const navigate = useNavigate();

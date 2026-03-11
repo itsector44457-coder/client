@@ -11,9 +11,12 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/users", {
-        headers: { adminid: adminId },
-      });
+      const res = await axios.get(
+        "import.meta.env.VITE_API_URL/api/admin/users",
+        {
+          headers: { adminid: adminId },
+        },
+      );
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to load users", err);
@@ -34,7 +37,7 @@ const AdminUsers = () => {
     ) {
       try {
         await axios.delete(
-          `http://localhost:5000/api/admin/users/${targetId}`,
+          `import.meta.env.VITE_API_URL/api/admin/users/${targetId}`,
           {
             headers: { adminid: adminId },
           },

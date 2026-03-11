@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 // 🔥 Socket connection (Server URL se match karein)
-const socket = io("http://localhost:5000");
+const socket = io("import.meta.env.VITE_API_URL");
 
 const NetworkProfile = ({ userId, onBack, currentUserId }) => {
   // --- 1. STATES ---
@@ -43,9 +43,9 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
         setLoading(true);
         // User Info, Posts, aur Study Sessions fetch ho rahe hain
         const [userRes, postsRes, sessionsRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/users/${userId}`),
-          axios.get(`http://localhost:5000/api/posts/user/${userId}`),
-          axios.get(`http://localhost:5000/api/sessions/${userId}`),
+          axios.get(`import.meta.env.VITE_API_URL/api/users/${userId}`),
+          axios.get(`import.meta.env.VITE_API_URL/api/posts/user/${userId}`),
+          axios.get(`import.meta.env.VITE_API_URL/api/sessions/${userId}`),
         ]);
 
         setUser(userRes.data);
@@ -95,7 +95,7 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
   const handleLike = async (postId) => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/posts/like/${postId}`,
+        `import.meta.env.VITE_API_URL/api/posts/like/${postId}`,
         { userId: currentUserId },
       );
       setPosts((prev) =>
@@ -114,7 +114,7 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
     try {
       const me = JSON.parse(localStorage.getItem("user") || "{}");
       const res = await axios.post(
-        `http://localhost:5000/api/posts/${postId}/comment`,
+        `import.meta.env.VITE_API_URL/api/posts/${postId}/comment`,
         {
           userId: currentUserId,
           userName: me.name || "Commander",
@@ -133,7 +133,7 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
   const handleSave = async (postId) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/users/save-post`,
+        `import.meta.env.VITE_API_URL/api/users/save-post`,
         { userId: currentUserId, postId },
       );
       const freshUser = JSON.parse(localStorage.getItem("user") || "{}");

@@ -216,3 +216,4 @@ server.listen(PORT, () => {
   🛠️ Admin: http://localhost:${PORT}/api/fields/admin/template
   `);
 });
+module.exports = app;

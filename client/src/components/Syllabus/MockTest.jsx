@@ -15,8 +15,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const API_MOCK = "http://localhost:5000/api/mock/generate";
-const API_MOCK_SAVE = "http://localhost:5000/api/mock/save-result";
+const API_MOCK = "import.meta.env.VITE_API_URL/api/mock/generate";
+const API_MOCK_SAVE = "import.meta.env.VITE_API_URL/api/mock/save-result";
 
 const MockTest = ({
   isOpen,

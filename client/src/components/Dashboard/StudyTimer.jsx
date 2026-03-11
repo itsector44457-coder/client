@@ -49,7 +49,10 @@ const StudyTimer = ({
         isStrictValid: feedback.work.trim().length > 5,
       };
 
-      await axios.post("http://localhost:5000/api/sessions/save", payload);
+      await axios.post(
+        "import.meta.env.VITE_API_URL/api/sessions/save",
+        payload,
+      );
 
       if (isTermination && battleActive) {
         await onBattleLose({

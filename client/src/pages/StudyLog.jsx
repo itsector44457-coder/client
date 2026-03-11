@@ -19,7 +19,9 @@ const StudyLog = ({ refreshKey = 0, fullPage = false }) => {
 
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/sessions/${myId}`);
+        const res = await axios.get(
+          `import.meta.env.VITE_API_URL/api/sessions/${myId}`,
+        );
         setLogs(res.data || {});
       } catch (err) {
         console.error("Study log fetch error:", err);
@@ -65,11 +67,16 @@ const StudyLog = ({ refreshKey = 0, fullPage = false }) => {
   const totalSecondsForVisibleDates = visibleDates.reduce((sum, date) => {
     return (
       sum +
-      (logs[date] || []).reduce((inner, session) => inner + (session.duration || 0), 0)
+      (logs[date] || []).reduce(
+        (inner, session) => inner + (session.duration || 0),
+        0,
+      )
     );
   }, 0);
 
-  const totalMinutesForVisibleDates = Math.floor(totalSecondsForVisibleDates / 60);
+  const totalMinutesForVisibleDates = Math.floor(
+    totalSecondsForVisibleDates / 60,
+  );
 
   return (
     <div
@@ -125,7 +132,9 @@ const StudyLog = ({ refreshKey = 0, fullPage = false }) => {
       ) : (
         <div
           className={`space-y-5 pr-1 ${
-            fullPage ? "flex-1 overflow-y-auto" : "max-h-[360px] overflow-y-auto"
+            fullPage
+              ? "flex-1 overflow-y-auto"
+              : "max-h-[360px] overflow-y-auto"
           }`}
         >
           {visibleDates.map((date) => (
@@ -152,10 +161,12 @@ const StudyLog = ({ refreshKey = 0, fullPage = false }) => {
                       </span>
                     </div>
                     <p className="text-xs text-slate-700">
-                      <span className="font-semibold">Break:</span> {session.breakReason}
+                      <span className="font-semibold">Break:</span>{" "}
+                      {session.breakReason}
                     </p>
                     <p className="text-xs text-slate-700 mt-1">
-                      <span className="font-semibold">Work:</span> {session.workDone}
+                      <span className="font-semibold">Work:</span>{" "}
+                      {session.workDone}
                     </p>
                   </div>
                 ))}

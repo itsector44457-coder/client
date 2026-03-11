@@ -12,7 +12,9 @@ const AdminFields = () => {
   // 1. Saari Fields Mangwao
   const fetchFields = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/fields");
+      const res = await axios.get(
+        "import.meta.env.VITE_API_URL/api/admin/fields",
+      );
       setFields(res.data);
     } catch (err) {
       console.error("Failed to fetch fields", err);
@@ -31,7 +33,7 @@ const AdminFields = () => {
     setLoading(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/admin/fields",
+        "import.meta.env.VITE_API_URL/api/admin/fields",
         { field: fieldName }, // Backend 'field' expect kar raha hai tumhare schema ke hisaab se
         { headers: { adminid: adminId } },
       );
@@ -50,9 +52,12 @@ const AdminFields = () => {
       window.confirm(`Kya tum sach mein '${name}' ko delete karna chahte ho?`)
     ) {
       try {
-        await axios.delete(`http://localhost:5000/api/admin/fields/${id}`, {
-          headers: { adminid: adminId },
-        });
+        await axios.delete(
+          `import.meta.env.VITE_API_URL/api/admin/fields/${id}`,
+          {
+            headers: { adminid: adminId },
+          },
+        );
         fetchFields();
       } catch (err) {
         alert("Delete failed.");

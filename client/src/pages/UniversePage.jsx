@@ -18,7 +18,8 @@ const buildUniverseData = (allPosts = []) => {
     }
 
     fieldMap[field].count += 1;
-    fieldMap[field].authors[author] = (fieldMap[field].authors[author] || 0) + 1;
+    fieldMap[field].authors[author] =
+      (fieldMap[field].authors[author] || 0) + 1;
   });
 
   const sortedEntries = Object.entries(fieldMap)
@@ -51,7 +52,7 @@ const UniversePage = ({ myField }) => {
     const fetchUniverseData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/posts");
+        const res = await axios.get("import.meta.env.VITE_API_URL/api/posts");
         const allPosts = res.data || [];
         setTotalPosts(allPosts.length);
         setCommunityData(buildUniverseData(allPosts));
@@ -69,7 +70,10 @@ const UniversePage = ({ myField }) => {
     () =>
       communityData.find(
         (item) =>
-          item.name.toLowerCase() === String(myField || "").trim().toLowerCase(),
+          item.name.toLowerCase() ===
+          String(myField || "")
+            .trim()
+            .toLowerCase(),
       ),
     [communityData, myField],
   );
@@ -94,7 +98,9 @@ const UniversePage = ({ myField }) => {
             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold inline-flex items-center gap-1">
               <Sparkles size={12} /> Active Fields
             </p>
-            <p className="text-sm font-black text-slate-900">{communityData.length}</p>
+            <p className="text-sm font-black text-slate-900">
+              {communityData.length}
+            </p>
           </div>
           <div className="rounded-lg border bg-slate-50 px-3 py-2">
             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold inline-flex items-center gap-1">

@@ -43,10 +43,10 @@ const UserProfile = () => {
       try {
         // charo cheezein ek saath mangwa rahe hain
         const results = await Promise.allSettled([
-          axios.get(`http://localhost:5000/api/posts/user/${myId}`),
-          axios.get(`http://localhost:5000/api/sessions/${myId}`),
-          axios.get(`http://localhost:5000/api/users/${myId}/saved`),
-          axios.get(`http://localhost:5000/api/battles/user/${myId}`), // 🔥 Battle logs API
+          axios.get(`import.meta.env.VITE_API_URL/api/posts/user/${myId}`),
+          axios.get(`import.meta.env.VITE_API_URL/api/sessions/${myId}`),
+          axios.get(`import.meta.env.VITE_API_URL/api/users/${myId}/saved`),
+          axios.get(`import.meta.env.VITE_API_URL/api/battles/user/${myId}`), // 🔥 Battle logs API
         ]);
 
         if (results[0].status === "fulfilled")
@@ -68,7 +68,7 @@ const UserProfile = () => {
 
         // Fresh User Data for stats
         const userRes = await axios.get(
-          `http://localhost:5000/api/users/${myId}`,
+          `import.meta.env.VITE_API_URL/api/users/${myId}`,
         );
         setUser(userRes.data);
       } catch (err) {

@@ -49,7 +49,9 @@ const AdminExamBuilder = () => {
   useEffect(() => {
     const fetchFields = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/admin/fields");
+        const res = await axios.get(
+          "import.meta.env.VITE_API_URL/api/admin/fields",
+        );
         setFields(res.data);
       } catch (err) {
         console.error("Failed to fetch fields");
@@ -101,7 +103,7 @@ const AdminExamBuilder = () => {
     setIsAIExtracting(true);
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/admin/extract-ai",
+        "import.meta.env.VITE_API_URL/api/admin/extract-ai",
         {
           rawText: rawAIText,
         },
@@ -161,7 +163,7 @@ const AdminExamBuilder = () => {
         explanation: q.explanation,
       }));
       await axios.post(
-        `http://localhost:5000/api/admin/fields/${examDetails.fieldId}/exams`,
+        `import.meta.env.VITE_API_URL/api/admin/fields/${examDetails.fieldId}/exams`,
         { ...examDetails, questions: formattedQuestions },
         { headers: { adminid: adminId } },
       );

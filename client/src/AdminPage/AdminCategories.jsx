@@ -25,7 +25,7 @@ const AdminCategories = () => {
 
   const fetchFields = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/fields");
+      const res = await axios.get("import.meta.env.VITE_API_URL/api/fields");
       setFields(res.data);
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -42,11 +42,14 @@ const AdminCategories = () => {
     setLoading(true);
     try {
       // Body matches your POST /admin/template route
-      await axios.post("http://localhost:5000/api/fields/admin/template", {
-        adminId,
-        field: newField,
-        subjects: [{ name: "General", topics: ["Introduction"] }], // Default subject
-      });
+      await axios.post(
+        "import.meta.env.VITE_API_URL/api/fields/admin/template",
+        {
+          adminId,
+          field: newField,
+          subjects: [{ name: "General", topics: ["Introduction"] }], // Default subject
+        },
+      );
       setNewField("");
       fetchFields();
       alert("✅ Domain Initialized with Default Syllabus!");
@@ -62,12 +65,15 @@ const AdminCategories = () => {
     if (!subjectData.name || !subjectData.topics)
       return alert("Details bharo bhai!");
     try {
-      await axios.post("http://localhost:5000/api/fields/admin/subject", {
-        adminId,
-        field: fieldName,
-        subjectName: subjectData.name,
-        topics: subjectData.topics, // Your backend handles comma-separated strings
-      });
+      await axios.post(
+        "import.meta.env.VITE_API_URL/api/fields/admin/subject",
+        {
+          adminId,
+          field: fieldName,
+          subjectName: subjectData.name,
+          topics: subjectData.topics, // Your backend handles comma-separated strings
+        },
+      );
       setSubjectData({ name: "", topics: "" });
       setActiveField(null);
       fetchFields();

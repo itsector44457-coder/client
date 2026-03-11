@@ -19,7 +19,8 @@ const getLocalDateString = (date = new Date()) => {
 
 const formatDateLabel = (dateString) => {
   const parts = (dateString || "").split("-").map(Number);
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return dateString;
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n)))
+    return dateString;
   const [year, month, day] = parts;
   return new Date(year, month - 1, day).toDateString();
 };
@@ -52,7 +53,7 @@ const Tasks = ({ onStreakUpdate }) => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/tasks/history/${myId}/${selectedDate}`,
+          `import.meta.env.VITE_API_URL/api/tasks/history/${myId}/${selectedDate}`,
           {
             params: { tzOffset: new Date().getTimezoneOffset() },
           },
@@ -71,10 +72,13 @@ const Tasks = ({ onStreakUpdate }) => {
   const addTask = async () => {
     if (!newTask.title.trim() || !myId || isHistoryView) return;
     try {
-      const res = await axios.post("http://localhost:5000/api/tasks/add", {
-        ...newTask,
-        userId: myId,
-      });
+      const res = await axios.post(
+        "import.meta.env.VITE_API_URL/api/tasks/add",
+        {
+          ...newTask,
+          userId: myId,
+        },
+      );
       setTasks((prev) => [...prev, res.data]);
       setNewTask({
         title: "",
@@ -91,11 +95,14 @@ const Tasks = ({ onStreakUpdate }) => {
     if (isHistoryView) return;
     try {
       const nextCompleted = !status;
-      const res = await axios.put(`http://localhost:5000/api/tasks/${id}`, {
-        isCompleted: nextCompleted,
-        completedAt: nextCompleted ? new Date().toISOString() : null,
-        completedDate: nextCompleted ? getLocalDateString() : "",
-      });
+      const res = await axios.put(
+        `import.meta.env.VITE_API_URL/api/tasks/${id}`,
+        {
+          isCompleted: nextCompleted,
+          completedAt: nextCompleted ? new Date().toISOString() : null,
+          completedDate: nextCompleted ? getLocalDateString() : "",
+        },
+      );
       const { _streak, ...taskData } = res.data || {};
       setTasks((prev) => prev.map((t) => (t._id === id ? taskData : t)));
 
@@ -110,7 +117,7 @@ const Tasks = ({ onStreakUpdate }) => {
   const deleteTask = async (id) => {
     if (isHistoryView) return;
     try {
-      await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+      await axios.delete(`import.meta.env.VITE_API_URL/api/tasks/${id}`);
       setTasks((prev) => prev.filter((t) => t._id !== id));
     } catch (err) {
       console.error("Task delete error:", err);
@@ -189,7 +196,10 @@ const Tasks = ({ onStreakUpdate }) => {
               <div className="flex items-center gap-3">
                 {isHistoryView ? (
                   task.isCompleted ? (
-                    <CheckCircle className="text-green-500 shrink-0" size={22} />
+                    <CheckCircle
+                      className="text-green-500 shrink-0"
+                      size={22}
+                    />
                   ) : (
                     <Circle className="text-slate-200 shrink-0" size={22} />
                   )
@@ -199,9 +209,15 @@ const Tasks = ({ onStreakUpdate }) => {
                     className="hover:scale-110 transition"
                   >
                     {task.isCompleted ? (
-                      <CheckCircle className="text-green-500 shrink-0" size={22} />
+                      <CheckCircle
+                        className="text-green-500 shrink-0"
+                        size={22}
+                      />
                     ) : (
-                      <Circle className="text-slate-200 shrink-0 hover:text-indigo-400" size={22} />
+                      <Circle
+                        className="text-slate-200 shrink-0 hover:text-indigo-400"
+                        size={22}
+                      />
                     )}
                   </button>
                 )}

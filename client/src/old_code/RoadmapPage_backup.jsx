@@ -84,7 +84,7 @@ const RoadmapPage = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/roadmap/generate-roadmap",
+        "import.meta.env.VITE_API_URL/api/roadmap/generate-roadmap",
         {
           field: "SSC Maths, Data Science & Robotics", //
           duration: duration,

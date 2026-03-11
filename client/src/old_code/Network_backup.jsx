@@ -42,7 +42,7 @@ const Network = ({
 
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/users");
+        const res = await axios.get("import.meta.env.VITE_API_URL/api/users");
 
         // Filter out current user
         const otherUsers = res.data.filter(
@@ -74,7 +74,7 @@ const Network = ({
     e.stopPropagation(); // Card click event ko rokne ke liye
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/users/${targetId}/follow`,
+        `import.meta.env.VITE_API_URL/api/users/${targetId}/follow`,
         { currentUserId },
       );
 

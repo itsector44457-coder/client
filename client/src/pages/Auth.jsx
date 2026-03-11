@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Mail, Lock, User, BookOpen, ArrowRight, Loader2 } from "lucide-react";
 
-const API_FIELDS = "http://localhost:5000/api/fields";
+const API_FIELDS = "import.meta.env.VITE_API_URL/api/fields";
 const DEFAULT_FIELDS = ["Coding", "Data Science", "MPPSC", "Maths"];
 
 const Auth = ({ onLoginSuccess, theme = "light" }) => {
@@ -43,7 +43,8 @@ const Auth = ({ onLoginSuccess, theme = "light" }) => {
   useEffect(() => {
     if (!fields.length) return;
     const selectedExists = fields.some(
-      (item) => item.toLowerCase() === String(formData.field || "").toLowerCase(),
+      (item) =>
+        item.toLowerCase() === String(formData.field || "").toLowerCase(),
     );
     if (!selectedExists) {
       setFormData((prev) => ({ ...prev, field: fields[0] }));
@@ -62,11 +63,14 @@ const Auth = ({ onLoginSuccess, theme = "light" }) => {
     try {
       if (isLogin) {
         // LOGIN LOGIC
-        const res = await axios.post("http://localhost:5000/api/auth/login", {
-          email: formData.email,
-          password: formData.password,
-          selectedField: formData.field,
-        });
+        const res = await axios.post(
+          "import.meta.env.VITE_API_URL/api/auth/login",
+          {
+            email: formData.email,
+            password: formData.password,
+            selectedField: formData.field,
+          },
+        );
 
         // Token aur User Info local storage mein save karo
         const loginUser = {
@@ -81,7 +85,7 @@ const Auth = ({ onLoginSuccess, theme = "light" }) => {
       } else {
         // REGISTER LOGIC
         const res = await axios.post(
-          "http://localhost:5000/api/auth/register",
+          "import.meta.env.VITE_API_URL/api/auth/register",
           formData,
         );
         alert(res.data.message); // "Account mast ban gaya!"
@@ -120,7 +124,9 @@ const Auth = ({ onLoginSuccess, theme = "light" }) => {
           >
             UNIVERSE HUB
           </h1>
-          <p className={`text-sm ${isDark ? "text-indigo-200" : "text-slate-500"}`}>
+          <p
+            className={`text-sm ${isDark ? "text-indigo-200" : "text-slate-500"}`}
+          >
             {isLogin
               ? "Welcome back! Login to continue."
               : "Join the ultimate study network."}
@@ -264,7 +270,9 @@ const Auth = ({ onLoginSuccess, theme = "light" }) => {
         </form>
 
         {/* Toggle Button */}
-        <div className={`mt-8 text-center text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+        <div
+          className={`mt-8 text-center text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}
+        >
           {isLogin ? "Account nahi hai? " : "Pehle se account hai? "}
           <button
             onClick={() => {

@@ -14,7 +14,7 @@ import {
   Trophy,
 } from "lucide-react";
 
-const API_ROADMAP = "http://localhost:5000/api/roadmap";
+const API_ROADMAP = "import.meta.env.VITE_API_URL/api/roadmap";
 
 const RoadmapPage = () => {
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");

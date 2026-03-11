@@ -109,7 +109,9 @@ const Dashboard = ({
     const fetchCategories = async () => {
       try {
         setLoadingCats(true);
-        const res = await axios.get("http://localhost:5000/api/categories");
+        const res = await axios.get(
+          "import.meta.env.VITE_API_URL/api/categories",
+        );
         setCategories(res.data);
       } catch (err) {
         console.error("Categories fetch error:", err);
@@ -151,7 +153,7 @@ const Dashboard = ({
     const fetchCount = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/presence/count",
+          "import.meta.env.VITE_API_URL/api/presence/count",
           { params: { field: myField } },
         );
         setLiveStudyCount(res.data.count || 0);
@@ -175,7 +177,7 @@ const Dashboard = ({
     if (!currentUserId || !myField) return;
     const pingPresence = async (active) => {
       try {
-        await axios.post("http://localhost:5000/api/presence/ping", {
+        await axios.post("import.meta.env.VITE_API_URL/api/presence/ping", {
           userId: currentUserId,
           field: myField,
           active,
@@ -232,7 +234,7 @@ const Dashboard = ({
     }
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/users/${currentUserId}/streak`,
+        `import.meta.env.VITE_API_URL/api/users/${currentUserId}/streak`,
         {
           params: { tzOffset: new Date().getTimezoneOffset() },
         },
@@ -297,10 +299,14 @@ const Dashboard = ({
     try {
       const [incomingRes, activeRes, historyRes] = await Promise.all([
         axios.get(
-          `http://localhost:5000/api/battles/incoming/${currentUserId}`,
+          `import.meta.env.VITE_API_URL/api/battles/incoming/${currentUserId}`,
         ),
-        axios.get(`http://localhost:5000/api/battles/active/${currentUserId}`),
-        axios.get(`http://localhost:5000/api/battles/history/${currentUserId}`),
+        axios.get(
+          `import.meta.env.VITE_API_URL/api/battles/active/${currentUserId}`,
+        ),
+        axios.get(
+          `import.meta.env.VITE_API_URL/api/battles/history/${currentUserId}`,
+        ),
       ]);
       setIncomingBattles(incomingRes.data || []);
       setActiveBattle(activeRes.data || null);
@@ -317,7 +323,7 @@ const Dashboard = ({
       if (challengeLoadingIds[targetId]) return;
       setChallengeLoadingIds((prev) => ({ ...prev, [targetId]: true }));
       const res = await axios.post(
-        "http://localhost:5000/api/battles/challenge",
+        "import.meta.env.VITE_API_URL/api/battles/challenge",
         {
           challengerId: currentUserId,
           opponentId: targetUser._id,
@@ -347,9 +353,12 @@ const Dashboard = ({
 
   const handleAcceptBattle = async (battleId) => {
     try {
-      await axios.put(`http://localhost:5000/api/battles/${battleId}/accept`, {
-        userId: currentUserId,
-      });
+      await axios.put(
+        `import.meta.env.VITE_API_URL/api/battles/${battleId}/accept`,
+        {
+          userId: currentUserId,
+        },
+      );
       setBattleNotice("Battle accepted!");
       reloadBattles();
     } catch (err) {
@@ -359,9 +368,12 @@ const Dashboard = ({
 
   const handleRejectBattle = async (battleId) => {
     try {
-      await axios.put(`http://localhost:5000/api/battles/${battleId}/reject`, {
-        userId: currentUserId,
-      });
+      await axios.put(
+        `import.meta.env.VITE_API_URL/api/battles/${battleId}/reject`,
+        {
+          userId: currentUserId,
+        },
+      );
       setBattleNotice("Challenge rejected.");
       reloadBattles();
     } catch (err) {
@@ -389,7 +401,7 @@ const Dashboard = ({
     try {
       if (!battleId || !loserId) return;
       const res = await axios.put(
-        `http://localhost:5000/api/battles/${battleId}/lose`,
+        `import.meta.env.VITE_API_URL/api/battles/${battleId}/lose`,
         { loserId, reason },
       );
       const winner = res.data?.winnerId?.name || "Winner";

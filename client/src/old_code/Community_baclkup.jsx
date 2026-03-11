@@ -46,7 +46,7 @@ const Community = ({ myField }) => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/posts");
+        const res = await axios.get("import.meta.env.VITE_API_URL/api/posts");
         // Filter: Sirf apne sector (BCA/Maths/Data Science) ke posts
         const filtered = res.data.filter((p) => p.field === currentSector);
         setPosts(filtered);
@@ -96,7 +96,7 @@ const Community = ({ myField }) => {
       };
 
       const res = await axios.post(
-        "http://localhost:5000/api/posts/add",
+        "import.meta.env.VITE_API_URL/api/posts/add",
         postPayload,
       );
 
@@ -123,7 +123,7 @@ const Community = ({ myField }) => {
     if (!myId) return;
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/posts/like/${postId}`,
+        `import.meta.env.VITE_API_URL/api/posts/like/${postId}`,
         { userId: myId },
       );
       setPosts((prev) =>
@@ -141,7 +141,7 @@ const Community = ({ myField }) => {
     if (!text || !myId) return;
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/posts/${postId}/comment`,
+        `import.meta.env.VITE_API_URL/api/posts/${postId}/comment`,
         {
           userId: myId,
           userName: myName,

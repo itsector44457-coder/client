@@ -43,7 +43,7 @@ const BattleArena = () => {
     const fetchExams = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/user/exams?field=${userField}`,
+          `import.meta.env.VITE_API_URL/api/user/exams?field=${userField}`,
         );
         setExams(res.data);
       } catch (err) {
@@ -195,7 +195,7 @@ const BattleArena = () => {
     });
 
     try {
-      await axios.post("http://localhost:5000/api/users/combat-result", {
+      await axios.post("import.meta.env.VITE_API_URL/api/users/combat-result", {
         userId: user.id || user._id,
         examId: currentExam._id,
         examTitle: currentExam.title,
@@ -210,9 +210,12 @@ const BattleArena = () => {
 
     if (isCheatSubmit) {
       try {
-        await axios.post("http://localhost:5000/api/users/mark-cheater", {
-          email: user.email,
-        });
+        await axios.post(
+          "import.meta.env.VITE_API_URL/api/users/mark-cheater",
+          {
+            email: user.email,
+          },
+        );
         const updatedUser = { ...user, cheaterTag: true };
         localStorage.setItem("user", JSON.stringify(updatedUser));
       } catch {
