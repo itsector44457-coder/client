@@ -4,12 +4,10 @@ import { Loader2, Target, BrainCircuit } from "lucide-react";
 
 import SubjectSidebar from "../Syllabus/SubjectSidebar";
 import TopicList from "../Syllabus/TopicList";
-import ResourceVault from "../Syllabus/ResourceVault";
 import MockTest from "./MockTest";
 import TestHistoryModal from "./TestHistoryModal";
 
 const API_ROADMAP = `https://backend-6hhv.onrender.com/api/roadmap`;
-const API_RESOURCES = `https://backend-6hhv.onrender.com/api/resources`;
 const API_MOCK = `https://backend-6hhv.onrender.com/api/mock`;
 
 const Syllabus = ({ myField = "" }) => {
@@ -29,9 +27,6 @@ const Syllabus = ({ myField = "" }) => {
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState("");
-
-  const [resources, setResources] = useState([]);
-  const [resourceType, setResourceType] = useState("All");
 
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
@@ -124,30 +119,6 @@ const Syllabus = ({ myField = "" }) => {
     }
   };
 
-  /* ===============================
-        LOAD RESOURCES
-  =============================== */
-
-  const loadResources = async (tId, eId) => {
-    if (!tId || !eId) {
-      setResources([]);
-      return;
-    }
-
-    try {
-      const params = { topicId: tId, examId: eId, userId: myId };
-
-      if (resourceType !== "All" && resourceType !== "Saved")
-        params.type = resourceType;
-
-      const res = await axios.get(API_RESOURCES, { params });
-
-      setResources(res.data || []);
-    } catch {
-      console.error("Vault Access Failed");
-    }
-  };
-
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -157,10 +128,6 @@ const Syllabus = ({ myField = "" }) => {
 
     init();
   }, [myId, effectiveFieldRaw]);
-
-  useEffect(() => {
-    if (selectedTopicId) loadResources(selectedTopicId, selectedExamId);
-  }, [selectedTopicId, selectedExamId, resourceType]);
 
   /* ===============================
         UI HANDLERS
@@ -227,10 +194,9 @@ const Syllabus = ({ myField = "" }) => {
   return (
     <div className="h-full flex flex-col gap-5 font-sans text-slate-900 bg-[#f8fafc] overflow-hidden max-h-screen p-4 relative">
       {/* HEADER */}
-
-      <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 shadow-sm flex items-center justify-between shrink-0">
+      <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-6">
-          <div className="w-14 h-14 bg-slate-900 rounded-3xl flex items-center justify-center text-indigo-500 shadow-2xl shadow-indigo-200">
+          <div className="w-14 h-14 bg-slate-900 rounded-3xl flex items-center justify-center text-indigo-500 shadow-2xl shadow-indigo-200 shrink-0">
             <Target size={28} />
           </div>
 
@@ -238,19 +204,17 @@ const Syllabus = ({ myField = "" }) => {
             <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1 italic">
               AI Generated Domain
             </p>
-
             <h3 className="text-2xl font-black text-slate-900 italic uppercase leading-none">
               {effectiveFieldRaw}
             </h3>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 self-end md:self-auto">
           <div className="bg-slate-50 border border-slate-100 px-6 py-3 rounded-3xl text-center">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
               Global Mastery
             </p>
-
             <p className="text-xl font-black text-indigo-600 mt-1">
               {selectedExam?.progressPercent || 0}%
             </p>
@@ -260,7 +224,6 @@ const Syllabus = ({ myField = "" }) => {
             <p className="text-[9px] font-black uppercase opacity-70">
               Sector Difficulty
             </p>
-
             <p className="text-sm font-black uppercase tracking-widest mt-1">
               {currentDifficulty}
             </p>
@@ -274,12 +237,10 @@ const Syllabus = ({ myField = "" }) => {
         </div>
       )}
 
-      {/* WORKSPACE */}
-
-      <div className="grid grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
-        {/* SUBJECT SIDEBAR */}
-
-        <div className="col-span-4 h-full overflow-hidden">
+      {/* 🚀 WORKSPACE - CLEANED UP LAYOUT */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
+        {/* SUBJECT SIDEBAR (Takes 4 columns out of 12) */}
+        <div className="md:col-span-4 h-full overflow-hidden">
           <SubjectSidebar
             subjects={selectedExam?.subjects || []}
             selectedSubjectId={selectedSubjectId}
@@ -290,9 +251,8 @@ const Syllabus = ({ myField = "" }) => {
           />
         </div>
 
-        {/* TOPIC LIST */}
-
-        <div className="col-span-4 h-full overflow-hidden border-r border-slate-200 pr-6">
+        {/* TOPIC LIST (Takes 8 columns out of 12 for maximum space) */}
+        <div className="md:col-span-8 h-full overflow-hidden">
           <TopicList
             topics={selectedSubject?.topics || []}
             selectedTopicId={selectedTopicId}
@@ -306,20 +266,9 @@ const Syllabus = ({ myField = "" }) => {
             savingTopicId={savingTopicId}
           />
         </div>
-
-        {/* RESOURCE VAULT */}
-
-        <div className="col-span-4 h-full overflow-hidden">
-          <ResourceVault
-            resources={resources}
-            resourceType={resourceType}
-            setResourceType={setResourceType}
-          />
-        </div>
       </div>
 
       {/* MOCK TEST MODAL */}
-
       <MockTest
         isOpen={isTestOpen}
         onClose={() => setIsTestOpen(false)}
@@ -335,7 +284,6 @@ const Syllabus = ({ myField = "" }) => {
       />
 
       {/* HISTORY MODAL */}
-
       <TestHistoryModal
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
