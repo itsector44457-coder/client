@@ -27,32 +27,24 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   /* ============================
         STREAK & CHECK-IN STATE
   ============================ */
-  // 1. Initialise State
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [streakCount, setStreakCount] = useState(userData?.streakCount || 0);
 
-  // 2. Simple logic to check if checked in today (Using localStorage for instant feel)
   useEffect(() => {
     const lastCheckIn = localStorage.getItem(`lastCheckIn_${myId}`);
     const today = new Date().toDateString();
-
-    if (lastCheckIn === today) {
-      setHasCheckedInToday(true);
-    }
+    if (lastCheckIn === today) setHasCheckedInToday(true);
   }, [myId]);
 
   /* ============================
         TIMER STATES
   ============================ */
-
   const [seconds, setSeconds] = useState(
     () => Number(localStorage.getItem("timer_seconds")) || 0,
   );
-
   const [isActive, setIsActive] = useState(
     () => localStorage.getItem("timer_isActive") === "true",
   );
-
   const [todayDeepSeconds, setTodayDeepSeconds] = useState(
     userData?.todayDeepSeconds || 0,
   );
@@ -60,14 +52,12 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   /* ============================
         BATTLE STATES
   ============================ */
-
   const [activeBattle, setActiveBattle] = useState(null);
   const [incomingChallenge, setIncomingChallenge] = useState(null);
 
   /* ============================
         UI STATES
   ============================ */
-
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
@@ -76,15 +66,12 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   /* ============================
         LIVE USER DATA SYNC
   ============================ */
-
   useEffect(() => {
     const handleStorageChange = () => {
       setUserData(JSON.parse(localStorage.getItem("user") || "{}"));
     };
-
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("user_updated", handleStorageChange);
-
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("user_updated", handleStorageChange);
@@ -94,22 +81,16 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   /* ============================
         SOCKET CONNECTION
   ============================ */
-
   useEffect(() => {
     if (!myId) return;
 
     socket.emit("join_private_sector", myId);
 
-    socket.on("receive_battle_request", (data) => {
-      setIncomingChallenge(data);
-    });
+    socket.on("receive_battle_request", (data) => setIncomingChallenge(data));
 
     socket.on("battle_response_received", (data) => {
       alert(`Commander ${data.targetName} has ${data.status} your challenge!`);
-
-      if (data.status === "accepted") {
-        fetchActiveBattle();
-      }
+      if (data.status === "accepted") fetchActiveBattle();
     });
 
     return () => {
@@ -121,13 +102,11 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   /* ============================
         FETCH ACTIVE BATTLE
   ============================ */
-
   const fetchActiveBattle = async () => {
     try {
       const res = await axios.get(
         `https://backend-6hhv.onrender.com/api/battles/active/${myId}`,
       );
-
       setActiveBattle(res.data);
     } catch (err) {
       console.log("No active battle");
@@ -141,44 +120,33 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   /* ============================
         TIMER LOGIC
   ============================ */
-
   useEffect(() => {
     let interval = null;
-
     if (isActive) {
       interval = setInterval(() => {
         setSeconds((prev) => prev + 1);
         localStorage.setItem("timer_lastTimestamp", Date.now().toString());
       }, 1000);
     }
-
     localStorage.setItem("timer_seconds", seconds);
     localStorage.setItem("timer_isActive", isActive);
-
     return () => clearInterval(interval);
   }, [isActive, seconds]);
 
   /* ============================
         HANDLERS
   ============================ */
-
-  // 🔥 3. The Check-in Handler
   const handleDailyCheckIn = async () => {
     try {
-      // API call to update streak in backend (optional, if you have this route)
-      // await axios.post(`https://backend-6hhv.onrender.com/api/users/${myId}/checkin`);
-
+      await axios.post(
+        `https://backend-6hhv.onrender.com/api/users/${myId}/checkin`,
+      );
       const newStreak = streakCount + 1;
 
-      // Update UI state
       setHasCheckedInToday(true);
       setStreakCount(newStreak);
+      localStorage.setItem(`lastCheckIn_${myId}`, new Date().toDateString());
 
-      // Save to localStorage
-      const today = new Date().toDateString();
-      localStorage.setItem(`lastCheckIn_${myId}`, today);
-
-      // Update user data in local storage
       const updatedUser = { ...userData, streakCount: newStreak };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUserData(updatedUser);
@@ -189,10 +157,8 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
 
   const handleSessionSaved = (duration) => {
     setTodayDeepSeconds((prev) => prev + duration);
-
     setSeconds(0);
     setIsActive(false);
-
     localStorage.removeItem("timer_seconds");
     localStorage.removeItem("timer_isActive");
     localStorage.removeItem("timer_lastTimestamp");
@@ -204,10 +170,8 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
       status: "accepted",
       targetName: userData.name,
     });
-
     setIncomingChallenge(null);
     fetchActiveBattle();
-
     navigate("/dashboard/battle-arena", {
       state: {
         opponent: incomingChallenge.senderName,
@@ -222,29 +186,29 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
       status: "rejected",
       targetName: userData.name,
     });
-
     setIncomingChallenge(null);
   };
 
   const formatHours = (sec) => `${(sec / 3600).toFixed(1)}h`;
 
   /* ============================
-        UI
+        UI (LAYOUT SHELL)
   ============================ */
-
   return (
-    <div className="flex h-[100dvh] w-full bg-slate-100 overflow-hidden relative">
+    // bg-slate-100 ko bg-slate-50 kiya gaya hai for a cleaner, modern look.
+    // selection colors add kiye hain taaki text select karne par minimal feel aaye.
+    <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900 font-sans">
       {/* SIDEBAR */}
       <Sidebar setZenMode={setZenMode} onLogout={onLogout} />
 
-      {/* MAIN CONTENT */}
+      {/* MAIN CONTENT WRAPPER */}
       <div className="flex flex-col flex-1 w-full min-w-0 overflow-hidden relative">
         {/* TOPBAR */}
         <Topbar
           currentUserName={userData.name || "Commander"}
           myField={myField}
           todayDeepSeconds={todayDeepSeconds + (isActive ? seconds : 0)}
-          streakCount={streakCount} // Updated to use local state
+          streakCount={streakCount}
           battlePoints={userData.battlePoints}
           setSettingsOpen={setSettingsOpen}
           setQuickCaptureOpen={setQuickCaptureOpen}
@@ -253,15 +217,14 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
             setResourceDeckEnabled(!resourceDeckEnabled)
           }
           formatHours={formatHours}
-          // 🔥 Passing New Props
           hasCheckedInToday={hasCheckedInToday}
           onCheckIn={handleDailyCheckIn}
         />
 
-        {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 pb-20 md:pb-6 scroll-smooth">
+        {/* PAGE CONTENT AREA - Adjusted paddings for minimal components */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 pb-24 md:pb-8 scroll-smooth no-scrollbar">
           {location.pathname === "/dashboard" && (
-            <div className="mb-4 sm:mb-6">
+            <div className="mb-5 sm:mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <StudyTimer
                 isActive={isActive}
                 setIsActive={setIsActive}
@@ -279,13 +242,15 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
             </div>
           )}
 
-          <Outlet
-            context={{
-              currentUserId: myId,
-              myField,
-              resourceDeckEnabled,
-            }}
-          />
+          <div className="animate-in fade-in duration-500">
+            <Outlet
+              context={{
+                currentUserId: myId,
+                myField,
+                resourceDeckEnabled,
+              }}
+            />
+          </div>
         </main>
       </div>
 
