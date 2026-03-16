@@ -10,10 +10,10 @@ import ZenMode from "../Dashboard/ZenMode";
 import QuickCaptureModal from "../Dashboard/QuickCaptureModal";
 import StudyTimer from "./StudyTimer";
 import BattleRequestModal from "../Battle/BattleRequestModal";
+import GlobalScratchpad from "../flashcards/GlobalScratchpad"; // ✅ NEW
 
 const socket = io(`https://backend-6hhv.onrender.com`);
 
-// ── localStorage key — StudyTimer ke saath same ──────────────
 const STORAGE_KEY = "skillvault_timer";
 
 const loadFromStorage = () => {
@@ -23,8 +23,6 @@ const loadFromStorage = () => {
     return null;
   }
 };
-
-// ─────────────────────────────────────────────────────────────
 
 const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   const navigate = useNavigate();
@@ -37,9 +35,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   const myId = userData?.id || userData?._id;
   const myField = localStorage.getItem("userField") || userData?.field || "";
 
-  /* ============================
-        STREAK & CHECK-IN STATE
-  ============================ */
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [streakCount, setStreakCount] = useState(userData?.streakCount || 0);
 
@@ -49,18 +44,10 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
     if (lastCheckIn === today) setHasCheckedInToday(true);
   }, [myId]);
 
-  /* ============================
-        TIMER STATES
-        ✅ FIX: purana timer_seconds / timer_isActive hata diya
-        Ab sirf skillvault_timer (StudyTimer ka key) se read karo
-  ============================ */
   const [seconds, setSeconds] = useState(() => {
-    // Mount pe stored state se recover karo
     const stored = loadFromStorage();
     if (!stored) return 0;
-
     if (stored.isRunning && stored.startEpoch) {
-      // Missed seconds calculate karo (page reload case)
       const missed = Math.floor((Date.now() - stored.startEpoch) / 1000);
       return (stored.seconds || 0) + missed;
     }
@@ -76,23 +63,13 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
     userData?.todayDeepSeconds || 0,
   );
 
-  /* ============================
-        BATTLE STATES
-  ============================ */
   const [activeBattle, setActiveBattle] = useState(null);
   const [incomingChallenge, setIncomingChallenge] = useState(null);
-
-  /* ============================
-        UI STATES
-  ============================ */
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [resourceDeckEnabled, setResourceDeckEnabled] = useState(true);
 
-  /* ============================
-        LIVE USER DATA SYNC
-  ============================ */
   useEffect(() => {
     const handleStorageChange = () => {
       setUserData(JSON.parse(localStorage.getItem("user") || "{}"));
@@ -105,30 +82,20 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
     };
   }, []);
 
-  /* ============================
-        SOCKET CONNECTION
-  ============================ */
   useEffect(() => {
     if (!myId) return;
-
     socket.emit("join_private_sector", myId);
-
     socket.on("receive_battle_request", (data) => setIncomingChallenge(data));
-
     socket.on("battle_response_received", (data) => {
       alert(`Commander ${data.targetName} has ${data.status} your challenge!`);
       if (data.status === "accepted") fetchActiveBattle();
     });
-
     return () => {
       socket.off("receive_battle_request");
       socket.off("battle_response_received");
     };
   }, [myId]);
 
-  /* ============================
-        FETCH ACTIVE BATTLE
-  ============================ */
   const fetchActiveBattle = async () => {
     try {
       const res = await axios.get(
@@ -144,17 +111,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
     fetchActiveBattle();
   }, [myId]);
 
-  /* ============================
-        ✅ TIMER LOGIC — FIXED
-        Purana setInterval HATA DIYA
-        Ab StudyTimer ka Web Worker timer hi source of truth hai
-        Dashboard sirf seconds ko LISTEN karta hai — khud count nahi karta
-        isActive aur seconds StudyTimer ke saath shared hain (props se)
-  ============================ */
-
-  /* ============================
-        HANDLERS
-  ============================ */
   const handleDailyCheckIn = async () => {
     try {
       await axios.post(
@@ -162,7 +118,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
       );
       const newStreak = streakCount + 1;
       const updatedUser = { ...userData, streakCount: newStreak };
-
       setHasCheckedInToday(true);
       setStreakCount(newStreak);
       localStorage.setItem(`lastCheckIn_${myId}`, new Date().toDateString());
@@ -174,23 +129,42 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   };
 
   const handleSessionSaved = (duration) => {
-    // Session save hone pe todayDeepSeconds mein add karo
     setTodayDeepSeconds((prev) => prev + duration);
-    // seconds aur isActive reset StudyTimer khud karega
-    // Dashboard ko alag se reset karne ki zarurat nahi
+  };
+
+  const handleAcceptBattle = () => {
+    socket.emit("respond_to_challenge", {
+      fromUserId: incomingChallenge.senderId,
+      status: "accepted",
+      targetName: userData.name,
+    });
+    setIncomingChallenge(null);
+    fetchActiveBattle();
+    navigate("/dashboard/battle-arena", {
+      state: {
+        opponent: incomingChallenge.senderName,
+        field: incomingChallenge.battleType,
+      },
+    });
+  };
+
+  const handleRejectBattle = () => {
+    socket.emit("respond_to_challenge", {
+      fromUserId: incomingChallenge.senderId,
+      status: "rejected",
+      targetName: userData.name,
+    });
+    setIncomingChallenge(null);
   };
 
   const formatHours = (sec) => `${(sec / 3600).toFixed(1)}h`;
 
-  /* ============================
-        UI (LAYOUT SHELL)
-  ============================ */
   return (
     <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900 font-sans">
       {/* SIDEBAR */}
       <Sidebar setZenMode={setZenMode} onLogout={onLogout} />
 
-      {/* MAIN CONTENT WRAPPER */}
+      {/* MAIN CONTENT */}
       <div className="flex flex-col flex-1 w-full min-w-0 overflow-hidden relative">
         {/* TOPBAR */}
         <Topbar
@@ -233,17 +207,14 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
 
           <div className="animate-in fade-in duration-500">
             <Outlet
-              context={{
-                currentUserId: myId,
-                myField,
-                resourceDeckEnabled,
-              }}
+              context={{ currentUserId: myId, myField, resourceDeckEnabled }}
             />
           </div>
         </main>
       </div>
 
-      {/* MODALS */}
+      {/* ── GLOBAL MODALS & OVERLAYS ── */}
+
       <BattleRequestModal
         request={incomingChallenge}
         onAccept={handleAcceptBattle}
@@ -286,34 +257,11 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
         isOpen={quickCaptureOpen}
         onClose={() => setQuickCaptureOpen(false)}
       />
+
+      {/* ✅ GLOBAL SCRATCHPAD — floating button har page pe */}
+      <GlobalScratchpad />
     </div>
   );
-
-  // ── Battle Handlers (inside return scope fix) ─────────────
-  function handleAcceptBattle() {
-    socket.emit("respond_to_challenge", {
-      fromUserId: incomingChallenge.senderId,
-      status: "accepted",
-      targetName: userData.name,
-    });
-    setIncomingChallenge(null);
-    fetchActiveBattle();
-    navigate("/dashboard/battle-arena", {
-      state: {
-        opponent: incomingChallenge.senderName,
-        field: incomingChallenge.battleType,
-      },
-    });
-  }
-
-  function handleRejectBattle() {
-    socket.emit("respond_to_challenge", {
-      fromUserId: incomingChallenge.senderId,
-      status: "rejected",
-      targetName: userData.name,
-    });
-    setIncomingChallenge(null);
-  }
 };
 
 export default Dashboard;
