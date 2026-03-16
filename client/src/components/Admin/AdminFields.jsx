@@ -9,7 +9,7 @@ const AdminFields = () => {
   const [fieldName, setFieldName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 1. Saari Fields Mangwao
+  // 1. Fetch Domains
   const fetchFields = async () => {
     try {
       const res = await axios.get(
@@ -25,7 +25,7 @@ const AdminFields = () => {
     fetchFields();
   }, []);
 
-  // 2. Nayi Field Add Karo
+  // 2. Add New Domain
   const handleAddField = async (e) => {
     e.preventDefault();
     if (!fieldName.trim()) return;
@@ -34,11 +34,11 @@ const AdminFields = () => {
     try {
       await axios.post(
         `https://backend-6hhv.onrender.com/api/admin/fields`,
-        { field: fieldName }, // Backend 'field' expect kar raha hai tumhare schema ke hisaab se
+        { field: fieldName },
         { headers: { adminid: adminId } },
       );
-      setFieldName(""); // Input clear karo
-      fetchFields(); // List ko update karo
+      setFieldName("");
+      fetchFields();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to add domain.");
     } finally {
@@ -46,10 +46,10 @@ const AdminFields = () => {
     }
   };
 
-  // 3. Field Delete Karo
+  // 3. Delete Domain
   const handleDelete = async (id, name) => {
     if (
-      window.confirm(`Kya tum sach mein '${name}' ko delete karna chahte ho?`)
+      window.confirm(`Are you sure you want to permanently delete '${name}'?`)
     ) {
       try {
         await axios.delete(
@@ -66,33 +66,41 @@ const AdminFields = () => {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
-      <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-8 text-white">
-        Domain Architect
-      </h2>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-12 font-sans">
+      {/* 🟢 HEADER */}
+      <div className="mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 flex items-center gap-3">
+          <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+            <LayoutGrid size={24} />
+          </div>
+          Domain Architect
+        </h2>
+        <p className="text-slate-500 text-sm font-medium mt-2">
+          Create and manage educational domains for the network.
+        </p>
+      </div>
 
       {/* 🟢 CREATE FIELD FORM */}
-      <div className="bg-slate-900 border border-indigo-500/30 p-6 rounded-[2rem] shadow-xl mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5">
-          <LayoutGrid size={80} />
-        </div>
-
+      <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-sm mb-8 relative overflow-hidden">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">
+          Add New Domain
+        </h3>
         <form
           onSubmit={handleAddField}
-          className="relative z-10 flex flex-col md:flex-row gap-4"
+          className="relative z-10 flex flex-col sm:flex-row gap-3"
         >
           <input
             type="text"
             required
-            placeholder="Enter New Domain Name (e.g. Cyber Security, Robotics)"
-            className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-6 py-4 text-white font-bold outline-none focus:border-indigo-500 transition-all"
+            placeholder="e.g. Cyber Security, Robotics, UPSC"
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
             value={fieldName}
             onChange={(e) => setFieldName(e.target.value)}
           />
           <button
             type="submit"
             disabled={loading}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:scale-105 transition-transform text-white px-8 py-4 rounded-xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-70 shadow-sm transition-colors shrink-0"
           >
             {loading ? (
               <Loader2 className="animate-spin" size={18} />
@@ -105,44 +113,47 @@ const AdminFields = () => {
       </div>
 
       {/* 🟢 FIELDS LIST */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {fields.map((f) => (
           <div
             key={f._id}
-            className="bg-slate-900 border border-white/5 p-6 rounded-[2rem] hover:border-indigo-500/30 transition-all group relative flex flex-col justify-between"
+            className="bg-white border border-slate-200 p-5 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all group relative flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
-                  <LayoutGrid size={24} className="text-indigo-400" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 shrink-0">
+                  <LayoutGrid size={20} className="text-indigo-600" />
                 </div>
-                <div>
-                  <h3 className="font-black text-white uppercase tracking-wider">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-800 text-base truncate">
                     {f.field}
                   </h3>
-                  <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">
+                  <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
                     Key: {f.fieldKey}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-white/5">
+            {/* Action Buttons */}
+            <div className="flex justify-end mt-5 pt-3 border-t border-slate-100">
               <button
                 onClick={() => handleDelete(f._id, f.field)}
-                className="p-2 text-slate-400 hover:text-rose-400 bg-white/5 hover:bg-rose-500/10 rounded-xl transition-colors"
+                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold"
                 title="Delete Domain"
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} />{" "}
+                <span className="sm:hidden group-hover:inline">Delete</span>
               </button>
             </div>
           </div>
         ))}
 
         {fields.length === 0 && (
-          <div className="col-span-full text-center py-20 border border-dashed border-white/10 rounded-[2rem]">
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">
-              No Domains Engineered Yet. Please add one above.
+          <div className="col-span-full flex flex-col items-center justify-center text-center py-16 border border-dashed border-slate-200 bg-white rounded-2xl">
+            <LayoutGrid size={40} className="text-slate-300 mb-3" />
+            <p className="text-slate-500 font-medium text-sm">
+              No domains engineered yet. Please add one above.
             </p>
           </div>
         )}
