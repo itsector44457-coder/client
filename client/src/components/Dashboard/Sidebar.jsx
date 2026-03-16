@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   History,
   Sparkles,
+  Brain, // ✅ NEW: Flashcards icon
 } from "lucide-react";
 import LogoImg from "../../assets/skill-vault-logo.png";
 
@@ -30,11 +31,12 @@ const Sidebar = ({ setZenMode, onLogout }) => {
     { path: "/dashboard/network", icon: UserPlus, label: "Network" },
     { path: "/dashboard/universe", icon: Sparkles, label: "Universe" },
     { path: "/roadmap", icon: Waypoints, label: "Roadmap" },
+    { path: "/dashboard/flashcards", icon: Brain, label: "Flashcards" }, // ✅ NEW
   ];
 
   return (
     <div className="fixed bottom-0 left-0 w-full z-[100] bg-white border-t border-slate-200 md:relative md:w-64 md:h-screen md:flex md:flex-col md:border-t-0 md:border-r md:bg-slate-50/30 transition-all duration-300">
-      {/* 🟢 TOP LOGO SECTION - Cleaned up text and box */}
+      {/* 🟢 TOP LOGO SECTION */}
       <div className="hidden md:flex px-6 py-6 shrink-0 items-center gap-3">
         <div className="w-9 h-9 rounded-lg overflow-hidden bg-white flex items-center justify-center shadow-sm border border-slate-200 shrink-0">
           <img
@@ -50,7 +52,7 @@ const Sidebar = ({ setZenMode, onLogout }) => {
         </div>
       </div>
 
-      {/* SCROLLABLE NAV - Adjusted padding, text sizes, and hover states */}
+      {/* SCROLLABLE NAV */}
       <div className="flex flex-row md:flex-col flex-1 overflow-x-auto md:overflow-y-auto px-2 py-2 md:px-4 md:py-2 space-x-1 md:space-x-0 md:space-y-1 no-scrollbar items-center md:items-stretch">
         {navItems.map(({ path, icon: Icon, label }) => (
           <NavLink
@@ -72,7 +74,7 @@ const Sidebar = ({ setZenMode, onLogout }) => {
           </NavLink>
         ))}
 
-        {/* Zen Mode Button - Softer green theme */}
+        {/* Zen Mode Button */}
         <button
           onClick={() => setZenMode(true)}
           className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 p-2 md:px-3 md:py-2.5 rounded-lg transition-colors flex-shrink-0 min-w-[68px] md:min-w-0 md:w-full md:mt-6 text-emerald-500 hover:text-emerald-600 md:text-emerald-600 md:bg-emerald-50 md:hover:bg-emerald-100 font-medium md:font-semibold group"
@@ -84,7 +86,7 @@ const Sidebar = ({ setZenMode, onLogout }) => {
         </button>
       </div>
 
-      {/* BOTTOM PROFILE & LOGOUT - Removed heavy background and uppercase */}
+      {/* BOTTOM PROFILE & LOGOUT */}
       <div className="hidden md:block p-4 border-t border-slate-200 shrink-0 bg-white">
         <div
           onClick={() => navigate("/dashboard/profile")}
@@ -109,7 +111,7 @@ const Sidebar = ({ setZenMode, onLogout }) => {
           </div>
         </div>
 
-        {/* Logout - Ghost button design (Subtle) */}
+        {/* Logout */}
         <button
           onClick={onLogout}
           className="flex items-center justify-center gap-2 py-2.5 px-3 w-full text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg mt-2 text-sm font-medium transition-colors"

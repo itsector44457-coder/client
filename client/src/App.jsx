@@ -27,6 +27,9 @@ import SessionHistory from "./components/Dashboard/SubViews/SessionHistory";
 import BattleHistory from "./components/Dashboard/SubViews/BattleHistory";
 import NeuralWeaknesses from "./components/Dashboard/SubViews/NeuralWeaknesses";
 
+// ✅ NEW: Flashcards Feature
+import FlashcardsPage from "./pages/FlashcardsPage";
+
 // --- Admin Pages ---
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminDashboard from "./components/Admin/AdminDashboard";
@@ -137,6 +140,9 @@ function App() {
             <Route path="history" element={<SessionHistory />} />
             <Route path="battles" element={<BattleHistory />} />
             <Route path="weakness" element={<NeuralWeaknesses />} />
+
+            {/* ✅ NEW: Flashcards & SRS Route */}
+            <Route path="flashcards" element={<FlashcardsPage />} />
           </Route>
 
           {/* 3. 🌐 GLOBAL PROTECTED PAGES */}
@@ -157,7 +163,7 @@ function App() {
             }
           />
 
-          {/* 4. 🛡️ ADMIN PANEL SYSTEM (🔥 FIX: Added ProtectedRoute here too!) */}
+          {/* 4. 🛡️ ADMIN PANEL SYSTEM */}
           <Route
             path="/admin"
             element={
