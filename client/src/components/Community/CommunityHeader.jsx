@@ -2,17 +2,18 @@ import React from "react";
 
 const CommunityHeader = ({ viewMode, setViewMode }) => {
   return (
-    <div className="flex justify-center py-3 sm:py-4 px-4 sticky top-0 z-10 bg-[#f8fafc]/90 backdrop-blur-md">
-      {/* Mobile par w-full aur max-w use kiya hai taaki dabbe jaisa na lage */}
-      <div className="flex bg-slate-200/70 p-1 rounded-xl w-full max-w-[320px] sm:w-auto shadow-inner">
+    // Sticky header with soft blur and a very subtle bottom border for separation
+    <div className="sticky top-0 z-20 bg-slate-50/85 backdrop-blur-md pt-4 pb-3 px-4 flex justify-center border-b border-slate-200/50">
+      {/* Segmented Control Wrapper - Soft background, no heavy inner shadow */}
+      <div className="flex bg-slate-200/50 p-1 rounded-xl w-full max-w-[320px] sm:w-auto transition-colors">
         {["Explore", "Following"].map((mode) => (
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
-            className={`flex-1 sm:flex-none px-6 py-2.5 sm:py-1.5 text-sm font-bold rounded-lg transition-all duration-300 ${
+            className={`flex-1 sm:flex-none sm:w-32 px-6 py-2 text-sm rounded-lg transition-all duration-200 ${
               viewMode === mode
-                ? "bg-white text-indigo-600 shadow-sm transform scale-[1.02]"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-indigo-600 font-semibold shadow-sm"
+                : "text-slate-500 font-medium hover:text-slate-700 hover:bg-slate-200/30"
             }`}
           >
             {mode}

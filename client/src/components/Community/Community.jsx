@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { X, Loader2 } from "lucide-react";
+import { Loader2, Radio } from "lucide-react";
 import CommunityHeader from "./CommunityHeader";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
@@ -23,10 +23,9 @@ const Community = ({ myField }) => {
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const myId = storedUser?.id || storedUser?._id;
   const myName = storedUser?.name || "Commander";
-  // BCA student context ke liye field setup
   const currentSector =
     myField || localStorage.getItem("userField") || "General";
-  const followingList = storedUser.following || []; // Jin doston ko follow kar rakha hai
+  const followingList = storedUser.following || [];
 
   // --- 3. FETCH BROADCASTS ---
   useEffect(() => {
@@ -36,7 +35,6 @@ const Community = ({ myField }) => {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      // Backend se saare posts le aao, filter hum UI par karenge
       const res = await axios.get(
         `https://backend-6hhv.onrender.com/api/posts`,
       );
@@ -48,13 +46,11 @@ const Community = ({ myField }) => {
     }
   };
 
-  // --- 4. 🔥 LOGIC: SMART FILTERING ---
+  // --- 4. SMART FILTERING ---
   const filteredPosts = posts.filter((post) => {
     if (viewMode === "Following") {
-      // Logic: Post ka authorId meri following list mein hona chahiye
       return followingList.includes(post.authorId);
     }
-    // Explore Mode Logic: Sirf mere sector (BCA/Data Science) ke posts dikhao
     return post.field === currentSector;
   });
 
@@ -107,7 +103,7 @@ const Community = ({ myField }) => {
   const handleLike = async (postId) => {
     try {
       const res = await axios.put(
-        `https://backend-6hhv.onrender.coms/api/posts/like/${postId}`,
+        `https://backend-6hhv.onrender.com/api/posts/like/${postId}`,
         { userId: myId },
       );
       setPosts((prev) =>
@@ -141,77 +137,91 @@ const Community = ({ myField }) => {
     }
   };
 
-  if (loading)
+  /* ==================================
+          UI RENDERING
+  ================================== */
+
+  if (loading) {
     return (
-      <div className="flex justify-center py-20 md:py-40">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
+      <div className="flex flex-col items-center justify-center py-20 md:py-40 h-full bg-slate-50">
+        <Loader2 className="animate-spin text-indigo-500 mb-3" size={32} />
+        <p className="text-sm font-medium text-slate-500 tracking-wide">
+          Syncing Sector Feed...
+        </p>
       </div>
     );
+  }
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#f8fafc]">
+    <div className="w-full h-full flex flex-col bg-slate-50 font-sans">
       <CommunityHeader
         currentSector={currentSector}
         viewMode={viewMode}
         setViewMode={setViewMode}
       />
 
-      {/* Main scrolling container - responsive padding */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 md:p-6">
-        <CreatePost
-          myName={myName}
-          newPost={newPost}
-          setNewPost={setNewPost}
-          imagePreview={imagePreview}
-          setImage={setImage}
-          setImagePreview={setImagePreview}
-          isExpiring={isExpiring}
-          setIsExpiring={setIsExpiring}
-          uploading={uploading}
-          onSubmit={handlePostSubmit}
-        />
+      {/* Main scrolling container - Optimized padding for minimal layout */}
+      <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-5 md:p-6 pb-24 scroll-smooth">
+        <div className="max-w-5xl mx-auto flex flex-col gap-6">
+          <CreatePost
+            myName={myName}
+            newPost={newPost}
+            setNewPost={setNewPost}
+            imagePreview={imagePreview}
+            setImage={setImage}
+            setImagePreview={setImagePreview}
+            isExpiring={isExpiring}
+            setIsExpiring={setIsExpiring}
+            uploading={uploading}
+            onSubmit={handlePostSubmit}
+          />
 
-        {/* Responsive Grid with dynamic gaps */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto pb-24 md:pb-20 mt-2 md:mt-0">
-          {filteredPosts.length > 0 ? (
-            filteredPosts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                myId={myId}
-                onLike={handleLike}
-                onImageClick={setFullImg}
-                isCommentOpen={showComments[post._id]}
-                onCommentToggle={(id) =>
-                  setShowComments((p) => ({ ...p, [id]: !p[id] }))
-                }
-                commentInput={commentInputs[post._id] || ""}
-                setCommentInput={(id, val) =>
-                  setCommentInputs((p) => ({ ...p, [id]: val }))
-                }
-                onCommentSubmit={handleComment}
-              />
-            ))
-          ) : (
-            <div className="col-span-full py-10 md:py-20 text-center text-slate-400 italic font-medium text-sm md:text-base px-4">
-              {viewMode === "Following"
-                ? "No broadcasts from your circle yet. Follow more commanders!"
-                : "No signals detected in this sector."}
-            </div>
-          )}
+          {/* Responsive Grid - Clean spacing */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 mt-2">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((post) => (
+                <PostCard
+                  key={post._id}
+                  post={post}
+                  myId={myId}
+                  onLike={handleLike}
+                  onImageClick={setFullImg}
+                  isCommentOpen={showComments[post._id]}
+                  onCommentToggle={(id) =>
+                    setShowComments((p) => ({ ...p, [id]: !p[id] }))
+                  }
+                  commentInput={commentInputs[post._id] || ""}
+                  setCommentInput={(id, val) =>
+                    setCommentInputs((p) => ({ ...p, [id]: val }))
+                  }
+                  onCommentSubmit={handleComment}
+                />
+              ))
+            ) : (
+              // Minimal Empty State
+              <div className="col-span-full py-16 flex flex-col items-center justify-center text-center bg-white border border-dashed border-slate-200 rounded-2xl">
+                <Radio size={40} className="text-slate-300 mb-3" />
+                <p className="text-slate-500 font-medium text-sm">
+                  {viewMode === "Following"
+                    ? "No signals from your circle yet. Connect with commanders!"
+                    : "Silence in this sector. Be the first to broadcast."}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Full Image Modal - stays full screen */}
+      {/* Full Image Modal - Clean light/dark blur */}
       {fullImg && (
         <div
-          className="fixed inset-0 bg-slate-950/98 z-[100] flex items-center justify-center p-2 sm:p-4 backdrop-blur-2xl"
+          className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-opacity"
           onClick={() => setFullImg(null)}
         >
           <img
             src={fullImg}
-            className="max-w-full max-h-[90vh] rounded-[1.5rem] sm:rounded-[2rem] object-contain"
-            alt="Full"
+            className="max-w-full max-h-[90vh] rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 duration-200"
+            alt="Expanded view"
           />
         </div>
       )}
