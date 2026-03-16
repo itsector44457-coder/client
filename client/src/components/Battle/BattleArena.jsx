@@ -235,47 +235,54 @@ const BattleArena = () => {
   return (
     <div
       ref={arenaRef}
-      className={`w-full min-h-screen transition-all ${
+      className={`w-full min-h-screen transition-all font-sans ${
         activeExam || testResult
-          ? "bg-[#0f172a] p-4 md:p-8 flex items-center justify-center overflow-y-auto"
-          : "p-4 md:p-0"
+          ? "bg-slate-50 p-4 md:p-8 flex items-center justify-center overflow-y-auto"
+          : "bg-transparent p-4 md:p-6"
       }`}
     >
       {/* =============================
             RESULT SCREEN
       ============================= */}
       {testResult && (
-        <div className="max-w-lg w-full bg-slate-900 border border-white/10 p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] text-center shadow-2xl mx-auto">
+        <div className="max-w-md w-full bg-white border border-slate-200 p-8 md:p-10 rounded-2xl md:rounded-3xl text-center shadow-xl mx-auto animate-in zoom-in-95 duration-300">
           {testResult.cheated ? (
             <>
-              <AlertTriangle
-                size={60}
-                className="mx-auto mb-4 md:mb-6 text-rose-500 animate-pulse md:w-[70px] md:h-[70px]"
-              />
-              <h2 className="text-3xl md:text-4xl font-black text-rose-500 uppercase mb-2 md:mb-3 leading-tight">
+              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-100">
+                <AlertTriangle
+                  size={36}
+                  className="text-rose-500 animate-pulse"
+                />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">
                 Test Cancelled
               </h2>
-              <p className="text-white text-sm md:text-base mb-6 md:mb-8 px-2">
-                Suspicious activity detected. Cheater tag applied.
+              <p className="text-slate-500 text-sm mb-8 px-2">
+                Suspicious activity detected. Protocol violated and cheater tag
+                applied.
               </p>
             </>
           ) : (
             <>
-              <ShieldAlert
-                size={50}
-                className={`mx-auto mb-4 md:mb-6 md:w-[60px] md:h-[60px] ${
+              <div
+                className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border ${
                   testResult.percentage >= 50
-                    ? "text-emerald-400"
-                    : "text-rose-400"
+                    ? "bg-emerald-50 border-emerald-100 text-emerald-500"
+                    : "bg-rose-50 border-rose-100 text-rose-500"
                 }`}
-              />
-              <h2 className="text-3xl md:text-4xl font-black text-white mb-3 md:mb-4">
+              >
+                <ShieldAlert size={36} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-6">
                 Combat Finished
               </h2>
-              <div className="text-5xl md:text-7xl font-black text-indigo-400 mb-2">
-                {testResult.score}/{testResult.total}
+              <div className="text-5xl font-bold text-indigo-600 mb-2 font-mono tracking-tight">
+                {testResult.score}
+                <span className="text-3xl text-slate-400">
+                  /{testResult.total}
+                </span>
               </div>
-              <p className="text-white text-sm md:text-base mb-6 md:mb-8">
+              <p className="text-slate-500 text-sm font-medium mb-8">
                 Accuracy: {testResult.percentage}%
               </p>
             </>
@@ -283,7 +290,7 @@ const BattleArena = () => {
 
           <button
             onClick={() => setTestResult(null)}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-black uppercase text-sm md:text-base transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-medium text-sm transition-colors shadow-sm"
           >
             Return to Arena
           </button>
@@ -294,56 +301,80 @@ const BattleArena = () => {
             LIVE EXAM
       ============================= */}
       {activeExam && !testResult && (
-        <div className="max-w-4xl w-full mx-auto py-6 md:py-0">
-          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-3 py-2 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-black text-center mb-4 md:mb-6">
+        <div className="max-w-3xl w-full mx-auto py-6 md:py-0 flex flex-col h-full md:h-auto">
+          {/* Subtle Warning Bar */}
+          <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-2.5 rounded-lg text-xs font-semibold text-center mb-6 flex items-center justify-center gap-2">
+            <AlertTriangle size={14} />
             Do not exit Fullscreen or switch tabs. Warnings: {warnings}/3
           </div>
 
-          <div className="bg-slate-900 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-white/5 mb-6 shadow-lg">
-            <h3 className="text-lg md:text-xl text-white mb-6 md:mb-8 leading-relaxed">
-              {currentQIndex + 1}.{" "}
+          <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm mb-6 flex-1">
+            <div className="mb-6">
+              <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
+                Question {currentQIndex + 1} of {activeExam.questions.length}
+              </span>
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold text-slate-800 mb-8 leading-relaxed">
               {activeExam.questions[currentQIndex].questionText}
             </h3>
 
-            <div className="space-y-3 md:space-y-4">
-              {activeExam.questions[currentQIndex].options.map((opt, i) => (
-                <div
-                  key={i}
-                  onClick={() => handleSelectOption(opt)}
-                  className={`p-3 md:p-4 rounded-xl md:rounded-2xl border cursor-pointer transition-all ${
-                    selectedAnswers[currentQIndex] === opt
-                      ? "border-indigo-500 bg-indigo-500/10 text-indigo-300"
-                      : "border-white/10 text-slate-300 hover:border-slate-500"
-                  }`}
-                >
-                  <span className="text-sm md:text-base">{opt}</span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              {activeExam.questions[currentQIndex].options.map((opt, i) => {
+                const isSelected = selectedAnswers[currentQIndex] === opt;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleSelectOption(opt)}
+                    className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-4 ${
+                      isSelected
+                        ? "bg-indigo-50 border-indigo-600 shadow-sm"
+                        : "bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                        isSelected
+                          ? "bg-indigo-600 text-white"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {String.fromCharCode(65 + i)}
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${
+                        isSelected ? "text-indigo-900" : "text-slate-700"
+                      }`}
+                    >
+                      {opt}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex justify-between items-center gap-4 mt-auto md:mt-0">
             <button
               disabled={currentQIndex === 0}
               onClick={() => setCurrentQIndex(currentQIndex - 1)}
-              className="px-4 py-3 md:px-6 md:py-3 bg-slate-800 text-white rounded-xl disabled:opacity-50 hover:bg-slate-700 transition-colors"
+              className="px-5 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl disabled:opacity-50 hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm font-medium"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} /> Back
             </button>
 
             {currentQIndex === activeExam.questions.length - 1 ? (
               <button
                 onClick={() => submitExam(false)}
-                className="flex-1 md:flex-none px-6 py-3 md:px-8 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold uppercase tracking-wide transition-all"
+                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-sm transition-colors shadow-sm"
               >
-                Submit
+                Submit Combat
               </button>
             ) : (
               <button
                 onClick={() => setCurrentQIndex(currentQIndex + 1)}
-                className="flex-1 md:flex-none px-6 py-3 md:px-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl flex items-center justify-center gap-2 font-bold uppercase tracking-wide transition-all"
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center gap-1.5 font-medium text-sm transition-colors shadow-sm"
               >
-                Next <ChevronRight size={16} />
+                Next <ChevronRight size={18} />
               </button>
             )}
           </div>
@@ -351,71 +382,80 @@ const BattleArena = () => {
       )}
 
       {/* =============================
-            EXAM LIST
+            EXAM LIST (DASHBOARD VIEW)
       ============================= */}
       {!activeExam && !testResult && (
-        <div className="max-w-6xl mx-auto pb-10">
-          <div className="mb-8 md:mb-10 px-2 md:px-0">
-            <h1 className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white uppercase flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-              <Swords className="text-indigo-500 w-8 h-8 md:w-10 md:h-10" />
+        <div className="max-w-5xl mx-auto pb-10">
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3 mb-4">
+              <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                <Swords size={24} />
+              </div>
               Battle Arena
             </h1>
-            <div className="bg-indigo-50 border border-indigo-100 dark:bg-slate-900/50 dark:border-white/5 p-4 md:p-5 rounded-2xl">
-              <h2 className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+
+            <div className="bg-indigo-50/80 border border-indigo-100 p-4 md:p-5 rounded-xl flex items-start gap-3">
+              <div className="mt-0.5 text-indigo-600">
+                <ShieldAlert size={18} />
+              </div>
+              <h2 className="text-sm text-indigo-900 leading-relaxed font-medium">
                 Sign up for more Mock Tests and Previous Year Combats to sharpen
                 your skills! Click the given link{" "}
                 <a
                   href="https://accounts.examgoal.com/signup"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline transition-all"
+                  className="text-indigo-700 font-bold hover:text-indigo-800 underline underline-offset-2 transition-all"
                 >
                   here
                 </a>
+                .
               </h2>
             </div>
           </div>
 
           {loading ? (
-            <div className="px-2 md:px-0">
-              <p className="text-slate-500 font-bold uppercase tracking-widest text-xs animate-pulse">
-                Scanning matrix...
+            <div className="py-12 flex flex-col items-center justify-center">
+              <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-slate-500 font-medium text-sm">
+                Fetching arena details...
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-2 md:px-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {exams.map((exam) => (
                 <div
                   key={exam._id}
-                  className="bg-white dark:bg-slate-900 border dark:border-white/5 p-5 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-sm hover:shadow-xl transition-all flex flex-col justify-between"
+                  className="bg-white border border-slate-200 p-5 md:p-6 rounded-2xl hover:border-indigo-200 hover:shadow-md transition-all flex flex-col justify-between group"
                 >
                   <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
                         {exam.type === "mock_test" ? "Mock Test" : "Past Paper"}
                       </span>
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                        <Clock size={10} /> {exam.timeLimit}m
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                        <Clock size={12} /> {exam.timeLimit}m
                       </span>
                     </div>
-                    <h3 className="text-lg md:text-xl font-black text-slate-800 dark:text-white mb-4 line-clamp-2 leading-tight">
+                    <h3 className="text-lg font-bold text-slate-800 mb-2 leading-snug group-hover:text-indigo-600 transition-colors">
                       {exam.title}
                     </h3>
                   </div>
 
                   <button
                     onClick={() => startExam(exam)}
-                    className="w-full mt-2 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white dark:bg-white/5 dark:text-white dark:hover:bg-indigo-600 py-3 md:py-3.5 rounded-xl font-black flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-colors"
+                    className="w-full mt-6 bg-slate-50 hover:bg-indigo-600 text-slate-700 hover:text-white border border-slate-200 hover:border-indigo-600 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm transition-all"
                   >
-                    <Play size={14} />
+                    <Play size={16} fill="currentColor" />
                     Start Combat
                   </button>
                 </div>
               ))}
 
               {exams.length === 0 && (
-                <div className="col-span-full text-center py-16 md:py-20 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-[2rem]">
-                  <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
+                <div className="col-span-full text-center py-16 border border-dashed border-slate-200 bg-white rounded-2xl">
+                  <Swords size={32} className="mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500 font-medium text-sm">
                     No active combats found.
                   </p>
                 </div>

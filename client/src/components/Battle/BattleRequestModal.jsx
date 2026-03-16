@@ -1,64 +1,62 @@
 import React from "react";
-import { Swords, X, Check, Zap } from "lucide-react";
+import { Swords } from "lucide-react";
 
 const BattleRequestModal = ({ request, onAccept, onReject }) => {
   if (!request) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in duration-300">
-        <div className="bg-indigo-600 p-6 sm:p-8 text-center relative overflow-hidden">
-          {/* Background Zap Icon scaled for mobile */}
-          <Zap className="absolute -right-4 -top-4 text-white/10 w-24 h-24 sm:w-32 sm:h-32" />
-
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl sm:rounded-3xl mx-auto flex items-center justify-center shadow-xl mb-3 sm:mb-4 rotate-3">
-            <Swords className="text-indigo-600 w-6 h-6 sm:w-8 sm:h-8" />
-          </div>
-          <h3 className="text-white font-black uppercase italic tracking-tighter text-lg sm:text-xl">
-            Battle Incoming!
-          </h3>
-        </div>
-
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
+      <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6 sm:p-8 text-center">
-          <p className="text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-1 sm:mb-2">
-            Challenger Detected
-          </p>
-          {/* line-clamp-1 add kiya hai taaki lamba naam phone par line na tode */}
-          <h4 className="text-xl sm:text-2xl font-black text-slate-900 uppercase italic mb-5 sm:mb-6 line-clamp-1 px-2">
-            {request.senderName}
-          </h4>
+          {/* 🟢 Clean Circular Icon Container */}
+          <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 rounded-full mx-auto flex items-center justify-center mb-5 shadow-sm">
+            <Swords className="text-indigo-600 w-7 h-7" strokeWidth={2} />
+          </div>
 
-          <div className="bg-slate-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-6 sm:mb-8 flex justify-between items-center border border-slate-100">
-            <div className="text-left">
-              <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase">
-                Battle Type
+          {/* 🟢 Title & Sender Info */}
+          <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight mb-1.5">
+            Combat Challenge
+          </h3>
+          <p className="text-sm text-slate-500 font-medium mb-6 px-2">
+            <span className="font-semibold text-slate-800">
+              {request.senderName}
+            </span>{" "}
+            has invited you to a battle!
+          </p>
+
+          {/* 🟢 Details Box - Soft & Minimal */}
+          <div className="bg-slate-50 rounded-xl p-4 mb-8 flex justify-between items-center border border-slate-100">
+            <div className="text-left flex-1 border-r border-slate-200">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                Mode
               </p>
-              <p className="text-[10px] sm:text-xs font-black text-indigo-600 uppercase">
+              <p className="text-sm font-bold text-slate-700 truncate pr-2">
                 {request.battleType}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase">
+            <div className="text-right flex-1 pl-4">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
                 Stake
               </p>
-              <p className="text-[10px] sm:text-xs font-black text-emerald-500 uppercase">
+              <p className="text-sm font-bold text-indigo-600">
                 {request.xpStake} XP
               </p>
             </div>
           </div>
 
-          <div className="flex gap-2 sm:gap-3">
+          {/* 🟢 Action Buttons - Standard SaaS Sizing */}
+          <div className="flex gap-3">
             <button
               onClick={onReject}
-              className="flex-1 py-3 sm:py-4 bg-slate-100 text-slate-400 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-500 transition-all"
+              className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-lg font-medium text-sm hover:bg-slate-50 transition-colors"
             >
-              Reject
+              Decline
             </button>
             <button
               onClick={onAccept}
-              className="flex-[2] py-3 sm:py-4 bg-indigo-600 text-white rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all"
+              className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 transition-colors shadow-sm"
             >
-              Accept Mission
+              Accept Match
             </button>
           </div>
         </div>
