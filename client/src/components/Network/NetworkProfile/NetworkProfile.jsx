@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
-import { Zap, Grid, BarChart2, History } from "lucide-react";
+import { Grid, BarChart2, History, Loader2, FileQuestion } from "lucide-react";
 
 import ProfileHeader from "./ProfileHeader";
 import ProfileInfo from "./ProfileInfo";
@@ -86,15 +86,20 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
     }
   };
 
-  if (loading)
+  /* ==================================
+          UI RENDERING
+  ================================== */
+  if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Zap className="animate-pulse text-indigo-500 w-8 h-8 sm:w-10 sm:h-10" />
+      <div className="flex flex-col h-full items-center justify-center bg-slate-50 font-sans">
+        <Loader2 className="animate-spin text-indigo-500 mb-3" size={32} />
+        <p className="text-sm font-medium text-slate-500">Loading profile...</p>
       </div>
     );
+  }
 
   return (
-    <div className="bg-white h-full w-full overflow-y-auto no-scrollbar rounded-none sm:rounded-[2.5rem] flex flex-col relative border-x-0 sm:border border-slate-100 shadow-none sm:shadow-sm">
+    <div className="bg-white h-full w-full overflow-y-auto no-scrollbar sm:rounded-2xl flex flex-col relative border-x-0 sm:border border-slate-200 shadow-sm font-sans">
       <ProfileHeader name={user?.name} onBack={onBack} />
 
       <ProfileInfo
@@ -105,26 +110,20 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
         onChallenge={handleChallenge}
       />
 
-      {/* Tabs */}
-      <div className="flex mt-2 sm:mt-6 border-b border-slate-50 sticky top-[52px] sm:top-[60px] z-30 bg-white/95 backdrop-blur-md">
+      {/* 🟢 TABS - Minimal & Sticky */}
+      <div className="flex border-b border-slate-100 sticky top-0 z-30 bg-white/90 backdrop-blur-md px-2 sm:px-4">
         {[
-          { id: "grid", icon: <Grid className="w-5 h-5 sm:w-6 sm:h-6" /> },
-          {
-            id: "stats",
-            icon: <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6" />,
-          },
-          {
-            id: "history",
-            icon: <History className="w-5 h-5 sm:w-6 sm:h-6" />,
-          },
+          { id: "grid", icon: <Grid size={20} /> },
+          { id: "stats", icon: <BarChart2 size={20} /> },
+          { id: "history", icon: <History size={20} /> },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex-1 py-3 sm:py-4 flex justify-center transition-all ${
+            className={`flex-1 py-3.5 flex justify-center items-center transition-all border-b-2 ${
               activeTab === t.id
-                ? "text-slate-900 border-b-2 border-black"
-                : "text-slate-300 hover:text-slate-500"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50"
             }`}
           >
             {t.icon}
@@ -132,18 +131,24 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
         ))}
       </div>
 
-      <div className="flex-1 bg-white min-h-[50vh]">
+      {/* 🟢 TAB CONTENT */}
+      <div className="flex-1 bg-slate-50/50 min-h-[50vh]">
         {activeTab === "grid" && (
           <ProfileGrid posts={posts} onPostClick={setSelectedPost} />
         )}
-        {/* Placeholder for other tabs if you add them later */}
+
+        {/* Empty states for other tabs */}
         {activeTab !== "grid" && (
-          <div className="flex items-center justify-center h-full py-20 text-slate-400 text-sm font-medium italic">
-            Module Syncing...
+          <div className="flex flex-col items-center justify-center h-full py-20 text-center opacity-60">
+            <FileQuestion size={40} className="text-slate-300 mb-3" />
+            <p className="text-slate-500 text-sm font-medium">
+              Data not synced yet.
+            </p>
           </div>
         )}
       </div>
 
+      {/* 🟢 MODAL */}
       {selectedPost && (
         <PostModal
           post={selectedPost}
@@ -158,7 +163,7 @@ const NetworkProfile = ({ userId, onBack, currentUserId }) => {
           setCommentInput={(id, val) =>
             setCommentInputs((p) => ({ ...p, [id]: val }))
           }
-          onCommentSubmit={() => {}} // Add comment handler logic if needed
+          onCommentSubmit={() => {}}
         />
       )}
     </div>

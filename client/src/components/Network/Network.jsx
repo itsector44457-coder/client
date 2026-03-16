@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import NetworkHeader from "./NetworkHeader";
 import UserCard from "./UserCard";
 import NetworkProfile from "../Network/NetworkProfile/NetworkProfile";
@@ -21,7 +21,7 @@ const Network = ({
   const myId = storedUser?.id || storedUser?._id;
   const myField = (storedUser?.field || "").toLowerCase();
 
-  // 🔥 FIX: fresh following list from state/localstorage
+  // Fresh following list from state/localstorage
   const followingList = storedUser.following || [];
 
   // --- 2. FETCH USERS ENGINE ---
@@ -72,14 +72,15 @@ const Network = ({
       }
       localStorage.setItem("user", JSON.stringify(freshUser));
 
-      // UI update to trigger re-render
+      // Fetch users again to update followers count on card
+      // (Optimized: Better to just update local state instead of full refetch if backend allows, but keeping your logic for safety)
       setUsers([...users]);
     } catch (err) {
       console.error("Social Link Failed", err);
     }
   };
 
-  // ---  search & battle logic ---
+  // --- search & battle logic ---
   const filteredUsers = users.filter(
     (u) =>
       (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,8 +96,8 @@ const Network = ({
         : String(activeBattle?.challengerId?._id || activeBattle?.challengerId)
       : "";
 
-  // Profile View Logic
-  if (selectedUserId)
+  // --- 4. PROFILE VIEW ---
+  if (selectedUserId) {
     return (
       <NetworkProfile
         userId={selectedUserId}
@@ -105,9 +106,11 @@ const Network = ({
         onChallengeUser={onChallengeUser}
       />
     );
+  }
 
+  // --- 5. MAIN UI ---
   return (
-    <div className="h-full w-full bg-[#f8fafc] flex flex-col">
+    <div className="h-full w-full bg-slate-50 flex flex-col font-sans">
       <NetworkHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -117,18 +120,21 @@ const Network = ({
 
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <Loader2 className="animate-spin text-indigo-600 mb-4" size={32} />
-          <p className="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest italic text-center">
-            Scanning Global Sectors...
+          <Loader2 className="animate-spin text-indigo-500 mb-3" size={32} />
+          <p className="text-sm font-medium text-slate-500 tracking-wide">
+            Discovering network...
           </p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 no-scrollbar pb-24 md:pb-8">
-          {/* 🔥 THE FIX: Responsive Grid with dynamic gaps */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 max-w-7xl mx-auto">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar pb-24 md:pb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 max-w-[90rem] mx-auto">
             {filteredUsers.length === 0 ? (
-              <div className="col-span-full py-16 sm:py-24 px-4 text-center border-2 border-dashed border-slate-200 rounded-[1.5rem] sm:rounded-[3rem] bg-white/50 italic text-slate-400 font-medium text-xs sm:text-sm">
-                No commanders found in this sector.
+              // Minimal Empty State
+              <div className="col-span-full py-20 px-4 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 rounded-2xl bg-white/50">
+                <Users size={40} className="text-slate-300 mb-3" />
+                <p className="text-slate-500 font-medium text-sm">
+                  No users found matching your search.
+                </p>
               </div>
             ) : (
               filteredUsers.map((user) => {

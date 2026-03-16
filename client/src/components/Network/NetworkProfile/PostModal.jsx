@@ -13,31 +13,40 @@ const PostModal = ({
   setCommentInput,
   onCommentSubmit,
 }) => (
-  <div className="fixed inset-0 z-[200] bg-slate-950/90 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-in fade-in">
-    {/* ❌ Close Button - Scaled and repositioned for mobile reachability */}
+  // 🟢 Clean Overlay: Soft dark blur
+  <div
+    className="fixed inset-0 z-[600] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+    onClick={onClose} // Clicking outside closes the modal
+  >
+    {/* ❌ Floating Close Button */}
     <button
       onClick={onClose}
-      className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/60 hover:text-white transition-all bg-white/10 p-2 sm:p-3 rounded-full hover:bg-white/20 active:scale-90 z-[210]"
+      className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/70 hover:text-white bg-slate-800/40 hover:bg-slate-800 transition-colors p-2 sm:p-2.5 rounded-full z-[610]"
+      title="Close"
     >
-      <X size={20} className="sm:w-6 sm:h-6" />
+      <X size={20} />
     </button>
 
-    {/* 📦 Modal Container - Responsive radius and max-height */}
-    <div className="bg-white max-w-lg w-full rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 mt-10 sm:mt-0">
-      {/* Scrollable Area - Uses dvh to prevent mobile keyboard layout breaks */}
-      <div className="max-h-[80dvh] sm:max-h-[85vh] overflow-y-auto no-scrollbar">
-        <PostCard
-          post={post}
-          myId={myId}
-          onLike={onLike}
-          isCommentOpen={showComments[post._id]}
-          onCommentToggle={() => onCommentToggle(post._id)}
-          commentInput={commentInput}
-          setCommentInput={(id, val) => setCommentInput(id, val)}
-          onCommentSubmit={() => onCommentSubmit(post._id)}
-          onImageClick={() => {}} // Disabled fullscreen image inside the modal to avoid modal-in-modal
-        />
-      </div>
+    {/* 📦 Modal Container */}
+    <div
+      className="w-full max-w-xl max-h-[85dvh] sm:max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200"
+      onClick={(e) => e.stopPropagation()} // Prevent clicks inside card from closing modal
+    >
+      {/* PostCard directly renders here. 
+        Kyunki PostCard pehle se hi bg-white aur rounded-2xl hai, 
+        humein extra background lagane ki zarurat nahi hai.
+      */}
+      <PostCard
+        post={post}
+        myId={myId}
+        onLike={onLike}
+        isCommentOpen={showComments[post._id]}
+        onCommentToggle={() => onCommentToggle(post._id)}
+        commentInput={commentInput}
+        setCommentInput={(id, val) => setCommentInput(id, val)}
+        onCommentSubmit={() => onCommentSubmit(post._id)}
+        onImageClick={() => {}} // Disabled fullscreen image inside the modal to avoid modal-in-modal inception
+      />
     </div>
   </div>
 );

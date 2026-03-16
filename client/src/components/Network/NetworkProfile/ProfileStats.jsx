@@ -1,41 +1,36 @@
 import React from "react";
 
 const ProfileStats = ({ postCount = 0, followers = 0, xp = 0 }) => (
-  <div className="flex items-center justify-around py-3 sm:py-5 border-b border-slate-100 bg-white sm:bg-transparent">
-    {/* Signals / Posts */}
-    <div className="flex-1 text-center">
-      <p className="text-base sm:text-lg font-black text-slate-900 leading-none">
+  // 🟢 Clean container with subtle top/bottom borders
+  <div className="flex items-center justify-between py-4 border-y border-slate-100 bg-white">
+    {/* 📊 Posts */}
+    <div className="flex-1 flex flex-col items-center justify-center">
+      <p className="text-lg sm:text-xl font-bold text-slate-800 leading-none">
         {postCount}
       </p>
-      <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase mt-1 tracking-widest">
-        Signals
-      </p>
+      <p className="text-xs font-medium text-slate-500 mt-1.5">Posts</p>
     </div>
 
-    {/* Vertical Divider (Visible on small screens and up) */}
-    <div className="w-px h-6 bg-slate-100 hidden sm:block" />
+    {/* Soft Vertical Divider (Now visible on all screens) */}
+    <div className="w-px h-8 bg-slate-100" />
 
-    {/* Followers / Commanders */}
-    <div className="flex-1 text-center">
-      <p className="text-base sm:text-lg font-black text-slate-900 leading-none">
+    {/* 👥 Followers */}
+    <div className="flex-1 flex flex-col items-center justify-center">
+      <p className="text-lg sm:text-xl font-bold text-slate-800 leading-none">
         {followers}
       </p>
-      <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase mt-1 tracking-widest">
-        Commanders
-      </p>
+      <p className="text-xs font-medium text-slate-500 mt-1.5">Followers</p>
     </div>
 
-    {/* Vertical Divider (Visible on small screens and up) */}
-    <div className="w-px h-6 bg-slate-100 hidden sm:block" />
+    {/* Soft Vertical Divider */}
+    <div className="w-px h-8 bg-slate-100" />
 
-    {/* XP Power */}
-    <div className="flex-1 text-center">
-      <p className="text-base sm:text-lg font-black text-indigo-600 leading-none italic">
+    {/* ⭐ XP */}
+    <div className="flex-1 flex flex-col items-center justify-center">
+      <p className="text-lg sm:text-xl font-bold text-indigo-600 leading-none">
         {xp}
       </p>
-      <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase mt-1 tracking-widest">
-        XP Power
-      </p>
+      <p className="text-xs font-medium text-slate-500 mt-1.5">XP</p>
     </div>
   </div>
 );

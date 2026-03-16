@@ -1,30 +1,38 @@
 import React from "react";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft, MoreHorizontal } from "lucide-react";
 
 const ProfileHeader = ({ name, onBack }) => (
-  <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl px-3 py-2 sm:px-6 sm:py-4 flex items-center justify-between border-b border-slate-100 shadow-sm sm:shadow-none">
-    <button
-      onClick={onBack}
-      className="p-2 sm:p-2.5 hover:bg-slate-100 rounded-full transition-all active:scale-90"
-      aria-label="Go Back"
-    >
-      <ArrowLeft size={20} className="sm:w-[22px] sm:h-[22px] text-slate-700" />
-    </button>
+  // 🟢 Clean frosted glass header with subtle bottom border
+  <div className="sticky top-0 z-40 bg-white/85 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-slate-100">
+    {/* Left: Back Button (Fixed width container for perfect centering) */}
+    <div className="w-10 flex justify-start shrink-0">
+      <button
+        onClick={onBack}
+        // -ml-2 optical alignment ke liye taaki padding hote hue bhi button edge ke paas lage
+        className="p-2 -ml-2 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-full transition-colors"
+        aria-label="Go Back"
+      >
+        <ArrowLeft size={20} />
+      </button>
+    </div>
 
-    {/* 🔥 THE FIX: truncate add kiya hai taaki lamba naam UI na tode */}
-    <h3 className="font-black text-slate-900 uppercase italic text-sm sm:text-base tracking-tighter truncate px-2 max-w-[200px] sm:max-w-md text-center">
-      {name || "Loading..."}
-    </h3>
+    {/* Center: Profile Name */}
+    <div className="flex-1 min-w-0 px-2">
+      <h3 className="font-bold text-slate-800 text-base sm:text-lg tracking-tight truncate text-center">
+        {name || "Loading..."}
+      </h3>
+    </div>
 
-    <button
-      className="p-2 sm:p-2.5 hover:bg-slate-100 rounded-full transition-all active:scale-90"
-      aria-label="More Options"
-    >
-      <MoreVertical
-        size={20}
-        className="sm:w-[22px] sm:h-[22px] text-slate-400"
-      />
-    </button>
+    {/* Right: More Options Button */}
+    <div className="w-10 flex justify-end shrink-0">
+      <button
+        // MoreVertical ki jagah MoreHorizontal web aur modern apps mein zyada clean lagta hai
+        className="p-2 -mr-2 text-slate-400 hover:text-slate-800 hover:bg-slate-50 rounded-full transition-colors"
+        aria-label="More Options"
+      >
+        <MoreHorizontal size={20} />
+      </button>
+    </div>
   </div>
 );
 

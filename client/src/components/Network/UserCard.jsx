@@ -15,80 +15,77 @@ const UserCard = ({
   return (
     <div
       onClick={() => onClick(uid)}
-      className="group relative bg-white border border-slate-100 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:shadow-indigo-100 hover:border-indigo-200 sm:hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden active:scale-[0.98] sm:active:scale-100"
+      className="group bg-white border border-slate-200 p-4 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 cursor-pointer flex flex-col h-full"
     >
-      {/* Visual Decoration (Hidden on small mobile to save GPU) */}
-      <div className="absolute -right-8 -top-8 w-24 h-24 bg-indigo-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
-
       {/* 👤 User Info Section */}
-      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 relative z-10">
-        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-[1rem] sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-xl italic shadow-lg shadow-indigo-100 group-hover:rotate-6 transition-transform shrink-0">
-          {(user.name || "C")[0]}
+      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+        {/* Minimal Circular Avatar */}
+        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shrink-0">
+          {(user.name || "C")[0]?.toUpperCase()}
         </div>
-        <div className="min-w-0">
-          <h4 className="font-black text-slate-800 uppercase italic tracking-tighter truncate leading-none flex items-center gap-1 text-sm sm:text-base">
+
+        <div className="min-w-0 flex-1">
+          <h4 className="font-bold text-slate-800 tracking-tight truncate flex items-center gap-1.5 text-base sm:text-lg leading-snug">
             {user.name || "Commander"}
-            <ShieldCheck size={12} className="text-blue-500 shrink-0" />
+            <ShieldCheck size={16} className="text-blue-500 shrink-0" />
           </h4>
-          <span className="inline-flex mt-1.5 sm:mt-2 text-[7px] sm:text-[8px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-lg font-black uppercase tracking-widest border border-slate-100 truncate max-w-full">
-            {user.field || "General"}
-          </span>
+          <p className="text-xs sm:text-sm font-medium text-slate-500 truncate mt-0.5">
+            {user.field || "General"} Sector
+          </p>
         </div>
       </div>
 
       {/* ⚔️ Action Buttons Section */}
-      <div className="flex gap-2 relative z-10">
+      <div className="flex gap-2.5 mt-auto">
+        {/* Challenge Button - Ghost style so it doesn't overpower */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             if (onChallenge) onChallenge(user);
           }}
           disabled={challengeBusy || inActiveBattle}
-          className="flex-1 bg-rose-500 text-white py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase italic shadow-lg shadow-rose-100 hover:bg-rose-600 transition-all disabled:opacity-50 active:scale-95"
+          className="flex-1 bg-white border border-rose-200 text-rose-600 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold hover:bg-rose-50 transition-colors disabled:opacity-50 disabled:hover:bg-white flex items-center justify-center gap-1.5 sm:gap-2"
         >
-          <span className="flex items-center justify-center gap-1.5 sm:gap-2">
-            <Swords size={12} className="sm:w-3.5 sm:h-3.5" />
-            <span className="truncate">
-              {inActiveBattle
-                ? "Duel On"
-                : challengeBusy
-                  ? "Calling..."
-                  : "Challenge"}
-            </span>
+          <Swords size={16} />
+          <span className="truncate">
+            {inActiveBattle
+              ? "Duel On"
+              : challengeBusy
+                ? "Calling..."
+                : "Challenge"}
           </span>
         </button>
 
+        {/* Link/Follow Button - Primary highlight */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             if (onFollow) onFollow(uid);
           }}
-          className={`flex-1 py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase italic transition-all border active:scale-95 ${
+          className={`flex-1 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 sm:gap-2 ${
             isFollowing
-              ? "bg-white text-slate-400 border-slate-100"
-              : "bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100 shadow-sm"
+              ? "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
+              : "bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100"
           }`}
         >
-          <span className="flex items-center justify-center gap-1.5 sm:gap-2">
-            {isFollowing ? (
-              <>
-                <UserCheck size={12} className="sm:w-3.5 sm:h-3.5" />{" "}
-                <span className="truncate">Linked</span>
-              </>
-            ) : (
-              <>
-                <UserPlus size={12} className="sm:w-3.5 sm:h-3.5" />{" "}
-                <span className="truncate">Link</span>
-              </>
-            )}
-          </span>
+          {isFollowing ? (
+            <>
+              <UserCheck size={16} />
+              <span className="truncate">Linked</span>
+            </>
+          ) : (
+            <>
+              <UserPlus size={16} />
+              <span className="truncate">Link</span>
+            </>
+          )}
         </button>
       </div>
 
-      {/* Speed Indicator */}
-      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-50 flex items-center justify-between text-[7px] sm:text-[8px] font-black text-slate-300 uppercase tracking-widest">
-        <span className="truncate">{user.field || "General"} Sector Hub</span>
-        <Zap size={10} className="text-indigo-200 shrink-0" />
+      {/* Subtle Footer */}
+      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-medium text-slate-400">
+        <span className="truncate">Network Hub</span>
+        <Zap size={12} className="text-slate-300" />
       </div>
     </div>
   );

@@ -7,22 +7,25 @@ const NetworkHeader = ({
   userCount,
   currentField,
 }) => (
-  <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-slate-100 p-4 sm:p-6 shadow-sm">
+  // 🟢 Clean frosted glass header
+  <div className="sticky top-0 z-20 bg-white/85 backdrop-blur-md border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
     {/* Top Row: Title & Online Count */}
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 mb-4 sm:mb-6">
+    <div className="flex items-start justify-between gap-4 mb-4 sm:mb-5">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 italic tracking-tighter uppercase leading-none">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight leading-none">
           Universe Network
         </h2>
-        <p className="text-slate-400 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] mt-1.5 sm:mt-2 truncate max-w-[250px]">
-          Syncing with {currentField || "All Sectors"}
+        <p className="text-xs font-medium text-slate-500 mt-1.5 truncate max-w-[250px] sm:max-w-md">
+          Sector:{" "}
+          <span className="text-indigo-600">{currentField || "All"}</span>
         </p>
       </div>
 
-      <div className="bg-indigo-50 text-indigo-600 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-indigo-100 flex items-center gap-2 self-start transition-all">
-        <Users size={14} className="sm:w-4 sm:h-4" />
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-          {userCount} Online
+      {/* Online Badge - Soft & Minimal */}
+      <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-100 flex items-center gap-1.5 shrink-0 shadow-sm">
+        <Users size={14} />
+        <span className="text-xs font-semibold">
+          {userCount} <span className="hidden sm:inline">Online</span>
         </span>
       </div>
     </div>
@@ -30,13 +33,13 @@ const NetworkHeader = ({
     {/* Search Bar Container */}
     <div className="relative group">
       <Search
-        className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors sm:w-[18px] sm:h-[18px]"
-        size={16}
+        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"
+        size={18}
       />
       <input
         type="text"
-        placeholder="Search name or expertise..."
-        className="w-full bg-slate-50 border border-slate-100 rounded-xl sm:rounded-[1.5rem] py-3 sm:py-4 pl-11 sm:pl-14 pr-5 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all text-xs sm:text-sm font-medium shadow-sm placeholder:text-slate-400"
+        placeholder="Search commanders or expertise..."
+        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium text-slate-800 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
