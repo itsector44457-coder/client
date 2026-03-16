@@ -29,7 +29,7 @@ import NeuralWeaknesses from "./components/Dashboard/SubViews/NeuralWeaknesses";
 
 // ✅ NEW: Flashcards Feature
 import FlashcardsPage from "./pages/FlashcardsPage";
-import StudyStats from "../components/flashcards/StudyStats";
+import StudyStats from "./components/flashcards/StudyStats";
 
 // --- Admin Pages ---
 import AdminLayout from "./components/Admin/AdminLayout";
