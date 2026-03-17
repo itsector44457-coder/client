@@ -11,7 +11,6 @@ import {
 
 const STORAGE_KEY = "skillvault_timer";
 
-// ── localStorage helpers ──────────────────────────────────────
 const saveToStorage = (data) =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
@@ -24,8 +23,6 @@ const loadFromStorage = () => {
 };
 
 const clearStorage = () => localStorage.removeItem(STORAGE_KEY);
-
-// ─────────────────────────────────────────────────────────────
 
 const StudyTimer = ({
   isActive,
@@ -41,12 +38,10 @@ const StudyTimer = ({
   const [feedback, setFeedback] = useState({ reason: "", work: "" });
   const [saving, setSaving] = useState(false);
 
-  // ── Refs ──────────────────────────────────────────────────
-  const workerRef = useRef(null); // Web Worker
-  const startTimeRef = useRef(null); // Epoch ms jab timer shuru hua
-  const startDateRef = useRef(null); // "YYYY-MM-DD" jab timer shuru hua (midnight fix)
-  const hiddenTimeRef = useRef(null); // Epoch ms jab tab hide hua
-  const pipWindowRef = useRef(null); // PiP window ref
+  const workerRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const startDateRef = useRef(null);
+  const pipWindowRef = useRef(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const myId = currentUser?.id || currentUser?._id;
@@ -56,7 +51,6 @@ const StudyTimer = ({
       ? battle?.opponentId
       : battle?.challengerId;
 
-  // ── Format HH:MM:SS ──────────────────────────────────────
   const formatTime = (s) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -64,116 +58,116 @@ const StudyTimer = ({
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${rs.toString().padStart(2, "0")}`;
   };
 
-  // ── LAYER 1: Web Worker ───────────────────────────────────
-  // Alag thread mein chalta hai — browser throttle nahi karta
+  // ── LAYER 1: Inline Web Worker ────────────────────────────
   useEffect(() => {
-    const worker = new Worker("/timerWorker.js");
+    const workerCode = `
+      let timer;
+      self.onmessage = function(e) {
+        if (e.data === 'start') {
+          timer = setInterval(() => self.postMessage('tick'), 1000);
+        } else if (e.data === 'stop') {
+          clearInterval(timer);
+        }
+      };
+    `;
+    const blob = new Blob([workerCode], { type: "application/javascript" });
+    const workerUrl = URL.createObjectURL(blob);
+    const worker = new Worker(workerUrl);
     workerRef.current = worker;
 
     worker.onmessage = () => {
-      setSeconds((prev) => {
-        const next = prev + 1;
-        const stored = loadFromStorage();
-        if (stored?.isRunning) {
-          saveToStorage({ ...stored, seconds: next });
+      if (startTimeRef.current && isActive) {
+        const currentSeconds = Math.floor(
+          (Date.now() - startTimeRef.current) / 1000,
+        );
+        setSeconds(currentSeconds);
+
+        if (currentSeconds % 5 === 0) {
+          saveToStorage({
+            isRunning: true,
+            seconds: currentSeconds,
+            startEpoch: startTimeRef.current,
+            startDate: startDateRef.current,
+          });
         }
-        return next;
-      });
+      }
     };
 
-    return () => worker.terminate();
-  }, []);
+    return () => {
+      worker.terminate();
+      URL.revokeObjectURL(workerUrl);
+    };
+  }, [isActive]);
+
+  // ── LAYER 2: Screen Wake-Up Sync (THE FIX) ────────────────
+  // Yeh fix guarantee karega ki screen off hone ke baad jaise hi on ho, time perfectly sync ho jaye.
+  useEffect(() => {
+    const handleWakeUp = () => {
+      if (!document.hidden && isActive && startTimeRef.current) {
+        // Instant math the moment screen turns on
+        const exactSeconds = Math.floor(
+          (Date.now() - startTimeRef.current) / 1000,
+        );
+        setSeconds(exactSeconds > 0 ? exactSeconds : 0);
+      }
+    };
+
+    // Listeners for when the screen unlocks or browser tab comes back to focus
+    document.addEventListener("visibilitychange", handleWakeUp);
+    window.addEventListener("focus", handleWakeUp);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleWakeUp);
+      window.removeEventListener("focus", handleWakeUp);
+    };
+  }, [isActive]);
 
   // ── LAYER 3: localStorage Recovery on Mount ───────────────
-  // Page refresh / crash ke baad timer wapas restore karo
   useEffect(() => {
     const stored = loadFromStorage();
     if (!stored) return;
 
     if (stored.isRunning && stored.startEpoch) {
-      // Missed seconds calculate karo
-      const missedSeconds = Math.floor((Date.now() - stored.startEpoch) / 1000);
-      const recovered = stored.seconds + missedSeconds;
-
-      setSeconds(recovered);
+      const exactSeconds = Math.floor((Date.now() - stored.startEpoch) / 1000);
+      setSeconds(exactSeconds > 0 ? exactSeconds : 0);
       setIsActive(true);
-      workerRef.current?.postMessage("start");
 
-      // Refs restore karo
       startTimeRef.current = stored.startEpoch;
       startDateRef.current =
-        stored.startDate ||
-        new Date(stored.startEpoch).toISOString().split("T")[0];
+        stored.startDate || new Date().toISOString().split("T")[0];
     } else if (!stored.isRunning && stored.seconds > 0) {
-      // Paused state restore
       setSeconds(stored.seconds);
       startDateRef.current = stored.startDate || null;
     }
   }, []);
 
-  // ── Start/Stop Worker based on isActive ──────────────────
+  // ── Start/Stop Logic & Epoch Sync ────────────────────────
   useEffect(() => {
     if (isActive) {
       workerRef.current?.postMessage("start");
 
-      // Pehli baar start ho raha hai
-      if (!startTimeRef.current) {
-        startTimeRef.current = Date.now();
-        // ✅ MIDNIGHT FIX: Start wali date capture karo
+      const currentStartEpoch = Date.now() - seconds * 1000;
+      startTimeRef.current = currentStartEpoch;
+
+      if (!startDateRef.current) {
         startDateRef.current = new Date().toISOString().split("T")[0];
       }
 
       saveToStorage({
         isRunning: true,
         seconds,
-        startEpoch: startTimeRef.current,
-        startDate: startDateRef.current, // ✅ Save karo taaki refresh pe bhi mile
+        startEpoch: currentStartEpoch,
+        startDate: startDateRef.current,
       });
     } else {
       workerRef.current?.postMessage("stop");
       saveToStorage({
         isRunning: false,
         seconds,
+        startEpoch: startTimeRef.current,
         startDate: startDateRef.current,
       });
     }
-  }, [isActive]);
-
-  // ── LAYER 2: Visibility API ───────────────────────────────
-  // Screen off / tab switch — missed time recover karo
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Tab chhupi — time note karo
-        if (isActive) {
-          hiddenTimeRef.current = Date.now();
-        }
-      } else {
-        // Tab wapas aayi — missed seconds add karo
-        if (isActive && hiddenTimeRef.current) {
-          const missedMs = Date.now() - hiddenTimeRef.current;
-          const missedSeconds = Math.floor(missedMs / 1000);
-          hiddenTimeRef.current = null;
-
-          if (missedSeconds > 0) {
-            setSeconds((prev) => {
-              const next = prev + missedSeconds;
-              saveToStorage({
-                isRunning: true,
-                seconds: next,
-                startEpoch: startTimeRef.current,
-                startDate: startDateRef.current,
-              });
-              return next;
-            });
-          }
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isActive]);
 
   // ── PiP Sync ──────────────────────────────────────────────
@@ -184,7 +178,6 @@ const StudyTimer = ({
     }
   }, [seconds]);
 
-  // ── Open Floating Timer ───────────────────────────────────
   const openFloatingTimer = async () => {
     if (!("documentPictureInPicture" in window)) {
       return alert("Chrome 116+ required for floating timer!");
@@ -216,11 +209,9 @@ const StudyTimer = ({
     }
   };
 
-  // ── Save Session ──────────────────────────────────────────
   const handleFinalSave = async (isTermination) => {
     if (seconds < 1) return alert("Bhai thoda toh padh lo! 😂");
 
-    // 24 ghante se zyada — warn karo par save karo
     if (seconds > 86400) {
       const confirm = window.confirm(
         "Bhai 24 ghante se zyada?! Neend nahi aayi? Save kar dete hain! 😭",
@@ -230,8 +221,6 @@ const StudyTimer = ({
 
     try {
       setSaving(true);
-
-      // ✅ MIDNIGHT FIX: startDate use karo — save wali date nahi
       const sessionDate =
         startDateRef.current || new Date().toISOString().split("T")[0];
 
@@ -242,7 +231,7 @@ const StudyTimer = ({
           feedback.reason.trim() ||
           (isTermination ? "Commander Exit" : "System Pause"),
         workDone: feedback.work.trim() || "Deep Study Protocol Completed",
-        date: sessionDate, // ✅ 11 PM shuru → date = us din ki, chahe 3 AM ko save karo
+        date: sessionDate,
         startTime: new Date(Date.now() - seconds * 1000).toISOString(),
         endTime: new Date().toISOString(),
         isStrictValid: feedback.work.trim().length > 5,
@@ -256,13 +245,11 @@ const StudyTimer = ({
         });
       }
 
-      // ── Full Cleanup ──
       onSessionSaved(seconds);
       setSeconds(0);
       setIsActive(false);
       startTimeRef.current = null;
       startDateRef.current = null;
-      hiddenTimeRef.current = null;
       clearStorage();
       workerRef.current?.postMessage("stop");
 
@@ -276,13 +263,15 @@ const StudyTimer = ({
 
       alert("Session Synced to Hub! 🚀");
     } catch (err) {
-      alert(`Error: ${err.response?.data?.message || "Server Error"}`);
+      alert(
+        `Network Error: Data save nahi hua. Aapka timer paused hai, internet check karke wapas try karo!`,
+      );
+      console.error(err);
     } finally {
       setSaving(false);
     }
   };
 
-  // ─────────────────────────────────────────────────────────
   return (
     <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm">
       {/* Top Section */}
@@ -300,7 +289,6 @@ const StudyTimer = ({
               <ExternalLink size={14} />
             </button>
 
-            {/* Live indicator */}
             {isActive && (
               <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
@@ -313,7 +301,6 @@ const StudyTimer = ({
             {formatTime(seconds)}
           </div>
 
-          {/* ✅ Start date dikhao — user ko pata rahe */}
           {startDateRef.current && (
             <div className="text-[10px] text-slate-400 mt-1 font-medium">
               Started: {startDateRef.current}
@@ -378,7 +365,6 @@ const StudyTimer = ({
               {modalMode === "terminate" ? "End Session" : "Pause Session"}
             </h4>
 
-            {/* Summary */}
             <div className="bg-slate-50 rounded-xl p-3 mb-4 flex justify-between items-center">
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
@@ -393,7 +379,6 @@ const StudyTimer = ({
                   Session Date
                 </p>
                 <p className="text-sm font-bold text-slate-700">
-                  {/* ✅ Start date dikhao — midnight cross hua ho toh bhi sahi */}
                   {startDateRef.current ||
                     new Date().toISOString().split("T")[0]}
                 </p>
@@ -404,6 +389,7 @@ const StudyTimer = ({
               <input
                 placeholder="Why stopping? (e.g., Break, Done)"
                 className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-200"
+                value={feedback.reason}
                 onChange={(e) =>
                   setFeedback({ ...feedback, reason: e.target.value })
                 }
@@ -411,6 +397,7 @@ const StudyTimer = ({
               <textarea
                 placeholder="What did you work on?"
                 className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none border border-slate-200"
+                value={feedback.work}
                 onChange={(e) =>
                   setFeedback({ ...feedback, work: e.target.value })
                 }
@@ -432,7 +419,6 @@ const StudyTimer = ({
               <button
                 onClick={() => {
                   setShowModal(false);
-                  if (modalMode === "pause") setIsActive(true);
                 }}
                 className="flex-1 bg-white text-slate-600 border border-slate-200 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
               >
