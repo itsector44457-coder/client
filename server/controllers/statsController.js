@@ -1,22 +1,27 @@
 const mongoose = require("mongoose");
 const Flashcard = require("../models/Flashcard");
-const StudySession = require("../models/StudySession"); // Flashcards ka daily review data
+const StudySession = require("../models/StudySession"); // Yeh Flashcard wali padhai hai
 const Deck = require("../models/Deck");
-const FocusSession = require("../models/Session"); // Timer wala session data
 
-// 🛠️ FIX: India (Local) Timezone ke hisaab se aaj ki date nikalna
+// 🚨 IMPORTANT: Yahan apne Timer/Focus wale model ko zaroor import karna
+// (Agar file ka naam alag hai toh string change kar lena)
+const FocusSession = require("../models/Session"); // <-- YAHAN DHYAN DENA
+
+// 🛠️ FIX: India (Local) Timezone ke hisaab se YYYY-MM-DD nikalna
 const getLocalYYYYMMDD = () => {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().split("T")[0];
 };
 
-// ==========================================
-// 1. DASHBOARD STATS (GET /api/stats/:id)
-// ==========================================
+// ── Full Stats for Dashboard ──────────────────────────────────
 const getStats = async (req, res) => {
   try {
     const { userId } = req.params;
+
+    // =========================================================
+    // 1. HEATMAP MERGE LOGIC (Timer + Flashcards)
+    // =========================================================
 
     // A) Flashcards ka data nikalo
     const cardSessions = await StudySession.find({ userId }).select(
@@ -31,24 +36,30 @@ const getStats = async (req, res) => {
         { $group: { _id: "$date", totalStudySeconds: { $sum: "$duration" } } },
       ]);
     } catch (e) {
-      console.log("Timer data nahi mila:", e.message);
+      console.log(
+        "Timer data fetch karne me error ya model nahi mila:",
+        e.message,
+      );
     }
 
-    // C) Dono ko Merge (Jod) karo Matrix ke liye
+    // C) Dono ko Merge (Jod) karo
     const heatmapMap = {};
 
+    // Pehle flashcards ka data map me daalo
     cardSessions.forEach((session) => {
       heatmapMap[session.date] = {
         date: session.date,
         reviewed: session.reviewed || 0,
         correct: session.correct || 0,
-        totalStudySeconds: 0,
+        totalStudySeconds: 0, // Default zero
       };
     });
 
+    // Ab Timer ka data usme add/merge karo
     timerSessions.forEach((session) => {
       const dateStr = session._id;
       if (!heatmapMap[dateStr]) {
+        // Agar us din card nahi padha, sirf timer chalaya, toh naya entry banao
         heatmapMap[dateStr] = {
           date: dateStr,
           reviewed: 0,
@@ -56,26 +67,32 @@ const getStats = async (req, res) => {
           totalStudySeconds: 0,
         };
       }
+      // Seconds add kar do
       heatmapMap[dateStr].totalStudySeconds = session.totalStudySeconds || 0;
     });
 
-    // Object ko wapas Array banakar sort kar lo
+    // Object ko wapas Array banakar Date ke hisaab se sort kar lo
     const finalHeatmap = Object.values(heatmapMap).sort(
       (a, b) => new Date(a.date) - new Date(b.date),
     );
 
-    // D) Retention per deck & Weakest Cards
+    // =========================================================
+    // 2. Retention per deck & Weakest Cards (TUMHARA PURANA LOGIC)
+    // =========================================================
     const decks = await Deck.find({ userId });
+
     const deckStats = await Promise.all(
       decks.map(async (deck) => {
         const cards = await Flashcard.find({ deckId: deck._id, userId });
         const total = cards.length;
         if (total === 0) return null;
 
+        // easeFactor > 2.5 = Mastered, < 1.8 = Weak
         const mastered = cards.filter((c) => c.easeFactor >= 2.5).length;
         const weak = cards.filter((c) => c.easeFactor < 1.8).length;
         const retention = Math.round((mastered / total) * 100);
 
+        // Weakest 3 cards
         const weakCards = cards
           .sort((a, b) => a.easeFactor - b.easeFactor)
           .slice(0, 3)
@@ -99,7 +116,9 @@ const getStats = async (req, res) => {
       }),
     );
 
-    // E) Overall numbers (Yeh tumhara Total XP banega)
+    // =========================================================
+    // 3. Overall numbers
+    // =========================================================
     const totalReviewed = cardSessions.reduce(
       (s, x) => s + (x.reviewed || 0),
       0,
@@ -109,7 +128,10 @@ const getStats = async (req, res) => {
       ? Math.round((totalCorrect / totalReviewed) * 100)
       : 0;
 
-    // F) Current Streak (MERGED DATA KE HISAAB SE)
+    // =========================================================
+    // 4. Current Streak (MERGED DATA KE HISAAB SE)
+    // =========================================================
+    // Yahan finalHeatmap use kiya hai taaki sirf Timer use karne par bhi streak na toote
     const dates = [...new Set(finalHeatmap.map((s) => s.date))]
       .sort()
       .reverse();
@@ -123,6 +145,7 @@ const getStats = async (req, res) => {
     );
     const yesterdayStr = yesterday.toISOString().split("T")[0];
 
+    // Check karo aaj start karein ya kal se
     let check = dates.includes(todayStr)
       ? todayStr
       : dates.includes(yesterdayStr)
@@ -137,52 +160,25 @@ const getStats = async (req, res) => {
           d.setDate(d.getDate() - 1);
           check = d.toISOString().split("T")[0];
         } else {
-          break;
+          break; // Streak toot gayi
         }
       }
     }
 
-    res.status(200).json({
-      heatmap: finalHeatmap,
+    // =========================================================
+    // 5. SEND DATA TO FRONTEND
+    // =========================================================
+    res.json({
+      heatmap: finalHeatmap, // <-- Ab isme cards + timer dono ka data ja raha hai!
       deckStats: deckStats.filter(Boolean),
       totalReviewed,
       overallRetention,
       streak,
     });
   } catch (err) {
-    console.error("Stats Fetch Error:", err);
+    console.error("Stats Error:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-// ==========================================
-// 2. LOG STUDY STATS (POST /api/stats/log)
-// ==========================================
-const logStat = async (req, res) => {
-  try {
-    const { userId, deckId, rating } = req.body;
-    const todayStr = getLocalYYYYMMDD();
-
-    // Check if user answered correctly (Good or Easy)
-    const isCorrect = rating === "good" || rating === "easy" ? 1 : 0;
-
-    // Turant Database update karo (Taaki XP live badhe)
-    const updatedSession = await StudySession.findOneAndUpdate(
-      { userId, date: todayStr },
-      {
-        $inc: {
-          reviewed: 1, // XP + 1
-          correct: isCorrect, // Correct + 1 (Retention ke liye)
-        },
-      },
-      { upsert: true, new: true }, // Agar aaj pehla card hai, toh DB me nayi row bana do
-    );
-
-    res.status(200).json({ success: true, session: updatedSession });
-  } catch (error) {
-    console.error("Log Stat Error:", error);
-    res.status(500).json({ message: "Database update failed" });
-  }
-};
-
-module.exports = { getStats, logStat };
+module.exports = { getStats };

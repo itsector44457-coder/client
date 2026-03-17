@@ -1,10 +1,9 @@
 // routes/statsRoutes.js
 const express = require("express");
 const router = express.Router();
-const { getStats, logStat } = require("../controllers/statsController"); // Pichle message wala controller
+const { getStats } = require("../controllers/statsController"); // Pichle message wala controller
 
 // Sirf ek route chahiye dashboard ke liye
-router.get("/:id", getStats);
-router.post("/log", logStat);
+router.get("/:userId", getStats);
 
 module.exports = router;
