@@ -31,12 +31,25 @@ const MONTHS_SHORT = [
 ];
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const getHeatColor = (hours) => {
-  if (!hours || hours === 0) return { bg: "#f8fafc", border: "#f1f5f9" };
-  if (hours <= 2) return { bg: "#bfdbfe", border: "#93c5fd" };
-  if (hours <= 4) return { bg: "#60a5fa", border: "#3b82f6" };
-  if (hours <= 6) return { bg: "#2563eb", border: "#1d4ed8" };
-  return { bg: "#1e3a8a", border: "#1e40af" };
+// ✅ FIX: Ab color logic MINUTES ke hisaab se chalega
+const getHeatColor = (minutes) => {
+  if (!minutes || minutes === 0) return { bg: "#f8fafc", border: "#f1f5f9" };
+  if (minutes <= 30) return { bg: "#bfdbfe", border: "#93c5fd" }; // 1-30 mins (Light)
+  if (minutes <= 60) return { bg: "#60a5fa", border: "#3b82f6" }; // 30-60 mins
+  if (minutes <= 120) return { bg: "#2563eb", border: "#1d4ed8" }; // 1-2 hours
+  return { bg: "#1e3a8a", border: "#1e40af" }; // 2+ hours (Darkest)
+};
+
+// Tooltip ke liye time format karne ka helper
+const formatTooltipTime = (mins) => {
+  if (!mins || mins === 0)
+    return <span className="text-slate-400">No activity</span>;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  let str = "";
+  if (h > 0) str += `${h}h `;
+  if (m > 0 || h === 0) str += `${m}m`;
+  return <span>{str.trim()} studied</span>;
 };
 
 function StudyHeatmap({ studyData = [] }) {
@@ -45,8 +58,8 @@ function StudyHeatmap({ studyData = [] }) {
   const { weeks, monthLabels } = useMemo(() => {
     const lookup = {};
     studyData.forEach((d) => {
-      lookup[d.date] = d.studyHours;
-    });
+      lookup[d.date] = d.studyMinutes;
+    }); // Updated to minutes
 
     const days = [];
     const today = new Date();
@@ -59,7 +72,7 @@ function StudyHeatmap({ studyData = [] }) {
       const dateStr = d.toISOString().split("T")[0];
       days.push({
         date: dateStr,
-        studyHours: lookup[dateStr] || 0,
+        studyMinutes: lookup[dateStr] || 0,
         dayOfWeek: d.getDay(),
         month: d.getMonth(),
         dayOfMonth: d.getDate(),
@@ -94,13 +107,18 @@ function StudyHeatmap({ studyData = [] }) {
     return { weeks: allWeeks, monthLabels: monthLabelMap };
   }, [studyData]);
 
-  const totalHours = studyData.reduce((s, d) => s + (d.studyHours || 0), 0);
-  const activeDays = studyData.filter((d) => d.studyHours > 0).length;
-  const maxHours = studyData.length
-    ? Math.max(...studyData.map((d) => d.studyHours || 0))
+  // Overall stats ab minutes ke hisaab se dikhenge
+  const totalMinutesAll = studyData.reduce(
+    (s, d) => s + (d.studyMinutes || 0),
+    0,
+  );
+  const totalHoursDisp = Math.floor(totalMinutesAll / 60);
+  const activeDays = studyData.filter((d) => d.studyMinutes > 0).length;
+  const maxMinutes = studyData.length
+    ? Math.max(...studyData.map((d) => d.studyMinutes || 0))
     : 0;
-  const avgOnActive =
-    activeDays > 0 ? (totalHours / activeDays).toFixed(1) : "0";
+  const avgOnActiveMins =
+    activeDays > 0 ? Math.round(totalMinutesAll / activeDays) : 0;
 
   const localToday = new Date();
   localToday.setMinutes(
@@ -124,7 +142,7 @@ function StudyHeatmap({ studyData = [] }) {
           {[
             {
               label: "Total",
-              value: `${totalHours}h`,
+              value: `${totalHoursDisp}h`,
               color: "bg-indigo-50 text-indigo-600",
             },
             {
@@ -133,13 +151,13 @@ function StudyHeatmap({ studyData = [] }) {
               color: "bg-blue-50 text-blue-600",
             },
             {
-              label: "Avg",
-              value: `${avgOnActive}h`,
+              label: "Avg/Day",
+              value: `${Math.floor(avgOnActiveMins / 60)}h ${avgOnActiveMins % 60}m`,
               color: "bg-sky-50 text-sky-600",
             },
             {
               label: "Best",
-              value: `${maxHours}h`,
+              value: `${Math.floor(maxMinutes / 60)}h ${maxMinutes % 60}m`,
               color: "bg-violet-50 text-violet-600",
             },
           ].map((p) => (
@@ -207,7 +225,7 @@ function StudyHeatmap({ studyData = [] }) {
                         style={{ width: CELL + "px", height: CELL + "px" }}
                       />
                     );
-                  const col = getHeatColor(day.studyHours);
+                  const col = getHeatColor(day.studyMinutes);
                   const isToday = day.date === todayStr;
                   return (
                     <div
@@ -226,7 +244,10 @@ function StudyHeatmap({ studyData = [] }) {
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "scale(1.5)";
                         e.currentTarget.style.zIndex = "50";
-                        setTooltip({ date: day.date, hours: day.studyHours });
+                        setTooltip({
+                          date: day.date,
+                          minutes: day.studyMinutes,
+                        });
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "scale(1)";
@@ -246,12 +267,7 @@ function StudyHeatmap({ studyData = [] }) {
         <div className="h-5">
           {tooltip && (
             <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest animate-in fade-in">
-              {tooltip.date} —{" "}
-              {tooltip.hours === 0 ? (
-                <span className="text-slate-400">No activity</span>
-              ) : (
-                <span>{tooltip.hours} units studied</span>
-              )}
+              {tooltip.date} — {formatTooltipTime(tooltip.minutes)}
             </div>
           )}
         </div>
@@ -259,11 +275,11 @@ function StudyHeatmap({ studyData = [] }) {
           <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
             Less
           </span>
-          {[0, 1, 3, 5, 7].map((h) => {
-            const col = getHeatColor(h);
+          {[0, 15, 45, 90, 150].map((m) => {
+            const col = getHeatColor(m);
             return (
               <div
-                key={h}
+                key={m}
                 style={{
                   width: "11px",
                   height: "11px",
@@ -365,26 +381,20 @@ export default function StudyStats() {
 
   const { heatmap, deckStats, totalReviewed, overallRetention, streak } = stats;
 
-  // 🚀 THE ULTIMATE HEATMAP LINKING LOGIC (Connects Timer & Cards)
+  // 🚀 PERFECT MINUTES LOGIC (1 Card = 1 Min, Timer = Actual Mins)
   const heatmapStudyData = heatmap.map((s) => {
     const safeDate = s.date.includes("T") ? s.date.split("T")[0] : s.date;
 
-    // Timer Logic: totalStudySeconds ko Hours me convert karo
-    const timerSeconds = s.totalStudySeconds || 0;
-    const timerHours = Math.floor(timerSeconds / 3600);
+    // Timer seconds ko minutes mein convert kiya
+    const timerMinutes = Math.floor((s.totalStudySeconds || 0) / 60);
 
-    // Cards Logic: 15 Cards = 1 Hour equivalent
-    const cardsEquivalentHours = Math.floor((s.reviewed || 0) / 15);
+    // 1 Card = 1 Minute XP
+    const cardsMinutes = s.reviewed || 0;
 
-    // Dono ka total score
-    let totalScore = timerHours + cardsEquivalentHours;
+    // Dono ko mila diya
+    const totalMinutesForDay = timerMinutes + cardsMinutes;
 
-    // Minimum effort fallback (15 min timer OR thode bhi cards = 1 box color)
-    if (totalScore === 0 && (timerSeconds > 900 || s.reviewed > 0)) {
-      totalScore = 1;
-    }
-
-    return { date: safeDate, studyHours: Math.min(8, totalScore) };
+    return { date: safeDate, studyMinutes: totalMinutesForDay };
   });
 
   return (
@@ -419,11 +429,12 @@ export default function StudyStats() {
         </div>
         <div className="bg-white border-2 border-slate-50 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-5 flex flex-col items-center gap-1 text-center shadow-sm">
           <Brain className="text-indigo-500" size={24} />
+          {/* YAHI TUMHARA TOTAL XP HAI! */}
           <div className="text-2xl sm:text-3xl font-black text-slate-800 italic">
-            {totalReviewed}
+            {totalReviewed} XP
           </div>
           <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-            Cards Reviewed
+            Cards (1 XP Each)
           </div>
         </div>
         <div className="bg-white border-2 border-slate-50 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-5 flex flex-col items-center gap-1 text-center shadow-sm">
