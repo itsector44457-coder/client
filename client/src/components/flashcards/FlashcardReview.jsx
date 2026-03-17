@@ -9,7 +9,7 @@ import {
   Loader2,
 } from "lucide-react";
 import axios from "axios";
-import Scratchpad from "./Scratchpad"; // ✅ Import
+import Scratchpad from "./Scratchpad";
 
 const RATINGS = [
   {
@@ -55,7 +55,6 @@ export default function FlashcardReview({ deck, onBack }) {
     easy: 0,
   });
 
-  // ✅ Scratchpad reset on every new card
   const [scratchKey, setScratchKey] = useState(0);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -75,10 +74,8 @@ export default function FlashcardReview({ deck, onBack }) {
   const handleRate = useCallback(
     async (rating) => {
       const card = cards[index];
-      if (!card || !card._id) {
-        console.error("Card or ID missing at index:", index);
-        return;
-      }
+      if (!card || !card._id) return;
+
       try {
         await axios.patch(
           `https://backend-6hhv.onrender.com/api/flashcards/cards/${card._id}/review`,
@@ -92,7 +89,10 @@ export default function FlashcardReview({ deck, onBack }) {
             deckId: deck._id,
             rating,
           })
-          .catch(() => {}); // silent fail — stats non-critical
+          .catch(() => {});
+
+        // 🚀 THE MAGIC: Fire global event so Topbar knows XP increased!
+        window.dispatchEvent(new CustomEvent("xpGained"));
 
         setResults((prev) => ({ ...prev, [rating]: prev[rating] + 1 }));
         setFlipped(false);
@@ -101,7 +101,7 @@ export default function FlashcardReview({ deck, onBack }) {
           if (index + 1 >= cards.length) setDone(true);
           else {
             setIndex((i) => i + 1);
-            setScratchKey((k) => k + 1); // ✅ Reset scratchpad for next card
+            setScratchKey((k) => k + 1);
           }
         }, 300);
       } catch (err) {
@@ -174,7 +174,6 @@ export default function FlashcardReview({ deck, onBack }) {
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto w-full flex flex-col h-full overflow-y-auto no-scrollbar">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-4 shrink-0">
         <button
           onClick={onBack}
@@ -198,7 +197,6 @@ export default function FlashcardReview({ deck, onBack }) {
         </span>
       </div>
 
-      {/* ── Flashcard ── */}
       <div
         onClick={() => !flipped && setFlipped(true)}
         className="shrink-0 cursor-pointer"
@@ -212,7 +210,6 @@ export default function FlashcardReview({ deck, onBack }) {
             height: "200px",
           }}
         >
-          {/* Front */}
           <div
             className="absolute inset-0 bg-white border-2 border-slate-50 rounded-[2rem] shadow-sm flex flex-col items-center justify-center p-8 text-center"
             style={{ backfaceVisibility: "hidden" }}
@@ -226,7 +223,6 @@ export default function FlashcardReview({ deck, onBack }) {
             </div>
           </div>
 
-          {/* Back */}
           <div
             className="absolute inset-0 bg-indigo-600 border-2 border-indigo-400 rounded-[2rem] shadow-sm flex flex-col items-center justify-center p-8 text-center"
             style={{
@@ -242,7 +238,6 @@ export default function FlashcardReview({ deck, onBack }) {
         </div>
       </div>
 
-      {/* ── Rating Buttons ── */}
       <div className="shrink-0 mt-3" style={{ minHeight: "72px" }}>
         {flipped ? (
           <div className="grid grid-cols-4 gap-2 animate-in slide-in-from-bottom-4 duration-200">
@@ -269,10 +264,7 @@ export default function FlashcardReview({ deck, onBack }) {
         )}
       </div>
 
-      {/* ✅ SCRATCHPAD — resets with each new card via key prop */}
       <Scratchpad key={scratchKey} defaultOpen={false} />
-
-      {/* Bottom padding */}
       <div className="h-4 shrink-0" />
     </div>
   );

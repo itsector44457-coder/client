@@ -13,7 +13,7 @@ const Topbar = ({
   currentUserName,
   myField,
   todayDeepSeconds = 0,
-  streakCount = 0, // Fallback ke liye
+  streakCount = 0,
   battlePoints = 0,
   setQuickCaptureOpen,
   resourceDeckEnabled,
@@ -22,11 +22,11 @@ const Topbar = ({
   hasCheckedInToday = true,
   onCheckIn,
 }) => {
-  // 🚀 Naya State: Live XP aur Streak ke liye
   const [liveXp, setLiveXp] = useState(0);
   const [liveStreak, setLiveStreak] = useState(streakCount);
+  const [xpAnimate, setXpAnimate] = useState(false); // Animations ke liye
 
-  // 🔄 Backend se Real-time data fetch karna (On Load)
+  // 1. Initial Load: Fetch XP from backend
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const myId = currentUser?.id || currentUser?._id;
@@ -35,12 +35,25 @@ const Topbar = ({
       axios
         .get(`https://backend-6hhv.onrender.com/api/stats/${myId}`)
         .then((res) => {
-          // totalReviewed hi humara XP hai
           setLiveXp(res.data.totalReviewed || 0);
           setLiveStreak(res.data.streak || 0);
         })
         .catch((err) => console.error("Topbar stats error:", err));
     }
+  }, []);
+
+  // 2. 🚀 Listen for Real-Time XP updates from Flashcards
+  useEffect(() => {
+    const handleXpGain = () => {
+      setLiveXp((prev) => prev + 1);
+
+      // Trigger a small bump animation
+      setXpAnimate(true);
+      setTimeout(() => setXpAnimate(false), 300);
+    };
+
+    window.addEventListener("xpGained", handleXpGain);
+    return () => window.removeEventListener("xpGained", handleXpGain);
   }, []);
 
   const formatHours = (sec) => {
@@ -51,7 +64,6 @@ const Topbar = ({
 
   return (
     <div className="bg-white/90 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-50">
-      {/* 1. Commander Identity */}
       <div className="flex items-center justify-between w-full md:w-auto">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm shrink-0">
@@ -67,7 +79,6 @@ const Topbar = ({
           </div>
         </div>
 
-        {/* Mobile Quick Actions */}
         <div className="flex md:hidden items-center gap-1.5 shrink-0">
           <button
             onClick={() => setQuickCaptureOpen(true)}
@@ -84,9 +95,7 @@ const Topbar = ({
         </div>
       </div>
 
-      {/* 2. Live Stats & Streak Area */}
       <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
-        {/* Deep Focus */}
         <div className="flex flex-col px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg min-w-[80px] shrink-0">
           <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
             Focus
@@ -96,8 +105,10 @@ const Topbar = ({
           </span>
         </div>
 
-        {/* 🌟 GAMIFIED LIVE XP BOX */}
-        <div className="flex flex-col px-3 py-1.5 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg min-w-[80px] shrink-0 shadow-sm">
+        {/* 🌟 LIVE GAMIFIED XP BOX WITH ANIMATION */}
+        <div
+          className={`flex flex-col px-3 py-1.5 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg min-w-[80px] shrink-0 shadow-sm transition-transform duration-200 ${xpAnimate ? "scale-110 shadow-md border-orange-400" : "scale-100"}`}
+        >
           <span className="text-[10px] font-black text-orange-500 uppercase tracking-wider flex items-center gap-1">
             ⭐ XP
           </span>
@@ -106,7 +117,6 @@ const Topbar = ({
           </span>
         </div>
 
-        {/* 🔥 LIVE STREAK BUTTON */}
         <button
           onClick={() => !hasCheckedInToday && onCheckIn && onCheckIn()}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border min-w-[100px] shrink-0 transition-all duration-200 text-left ${
@@ -141,7 +151,6 @@ const Topbar = ({
           </div>
         </button>
 
-        {/* Mobile Resource Toggle */}
         <button
           onClick={toggleResourceDeck}
           className={`md:hidden shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors h-full ${
@@ -153,7 +162,6 @@ const Topbar = ({
           Mod: {resourceDeckEnabled ? "On" : "Off"}
         </button>
 
-        {/* 3. Global Quick Actions (Desktop Only) */}
         <div className="hidden md:flex items-center gap-1 pl-3 ml-1 border-l border-slate-100 shrink-0">
           <button
             onClick={() => setQuickCaptureOpen(true)}
