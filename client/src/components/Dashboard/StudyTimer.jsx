@@ -42,6 +42,7 @@ const StudyTimer = ({
   const startTimeRef = useRef(null);
   const startDateRef = useRef(null);
   const pipWindowRef = useRef(null);
+  const isActiveRef = useRef(isActive); // ✅ PiP ko live status batane ke liye
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const myId = currentUser?.id || currentUser?._id;
@@ -99,23 +100,18 @@ const StudyTimer = ({
     };
   }, [isActive]);
 
-  // ── LAYER 2: Screen Wake-Up Sync (THE FIX) ────────────────
-  // Yeh fix guarantee karega ki screen off hone ke baad jaise hi on ho, time perfectly sync ho jaye.
+  // ── LAYER 2: Screen Wake-Up Sync ──────────────────────────
   useEffect(() => {
     const handleWakeUp = () => {
       if (!document.hidden && isActive && startTimeRef.current) {
-        // Instant math the moment screen turns on
         const exactSeconds = Math.floor(
           (Date.now() - startTimeRef.current) / 1000,
         );
         setSeconds(exactSeconds > 0 ? exactSeconds : 0);
       }
     };
-
-    // Listeners for when the screen unlocks or browser tab comes back to focus
     document.addEventListener("visibilitychange", handleWakeUp);
     window.addEventListener("focus", handleWakeUp);
-
     return () => {
       document.removeEventListener("visibilitychange", handleWakeUp);
       window.removeEventListener("focus", handleWakeUp);
@@ -143,9 +139,9 @@ const StudyTimer = ({
 
   // ── Start/Stop Logic & Epoch Sync ────────────────────────
   useEffect(() => {
+    isActiveRef.current = isActive; // Update ref for PiP
     if (isActive) {
       workerRef.current?.postMessage("start");
-
       const currentStartEpoch = Date.now() - seconds * 1000;
       startTimeRef.current = currentStartEpoch;
 
@@ -170,24 +166,36 @@ const StudyTimer = ({
     }
   }, [isActive]);
 
-  // ── PiP Sync ──────────────────────────────────────────────
+  // ── PiP Sync (Time & Buttons) ─────────────────────────────
   useEffect(() => {
     if (pipWindowRef.current?.document) {
-      const el = pipWindowRef.current.document.getElementById("pip-time");
-      if (el) el.innerText = formatTime(seconds);
-    }
-  }, [seconds]);
+      // Update Time
+      const timeEl = pipWindowRef.current.document.getElementById("pip-time");
+      if (timeEl) timeEl.innerText = formatTime(seconds);
 
+      // Update Play/Pause Button dynamically
+      const toggleBtn =
+        pipWindowRef.current.document.getElementById("pip-toggle-btn");
+      if (toggleBtn) {
+        toggleBtn.innerHTML = isActive ? "⏸ Pause" : "▶ Resume";
+        toggleBtn.style.backgroundColor = isActive ? "#f59e0b" : "#4f46e5"; // Amber for Pause, Indigo for Resume
+      }
+    }
+  }, [seconds, isActive]);
+
+  // ── 🚀 OPEN FLOATING TIMER (WITH NEW BUTTONS) ─────────────
   const openFloatingTimer = async () => {
     if (!("documentPictureInPicture" in window)) {
       return alert("Chrome 116+ required for floating timer!");
     }
     try {
       const pipWindow = await window.documentPictureInPicture.requestWindow({
-        width: 280,
-        height: 140,
+        width: 320,
+        height: 180,
       });
       pipWindowRef.current = pipWindow;
+
+      // Injecting HTML with Buttons
       pipWindow.document.body.innerHTML = `
         <div style="display:flex;flex-direction:column;justify-content:center;
           align-items:center;height:100vh;background:#ffffff;color:#0f172a;
@@ -196,11 +204,50 @@ const StudyTimer = ({
             letter-spacing:1px;margin-bottom:4px;font-weight:600;">
             Study Focus
           </div>
-          <div id="pip-time" style="font-size:40px;font-weight:700;color:#4f46e5;
-            font-variant-numeric:tabular-nums;letter-spacing:-1px;">
+          <div id="pip-time" style="font-size:42px;font-weight:700;color:#4f46e5;
+            font-variant-numeric:tabular-nums;letter-spacing:-1px;margin-bottom:16px;">
             ${formatTime(seconds)}
           </div>
-        </div>`;
+          
+          <div style="display:flex; gap: 12px;">
+            <button id="pip-toggle-btn" style="padding: 8px 16px; border: none; border-radius: 8px; background: ${isActiveRef.current ? "#f59e0b" : "#4f46e5"}; color: white; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s;">
+              ${isActiveRef.current ? "⏸ Pause" : "▶ Resume"}
+            </button>
+            <button id="pip-stop-btn" style="padding: 8px 16px; border: 1px solid #f43f5e; border-radius: 8px; background: #fff; color: #f43f5e; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s;">
+              ⏹ Stop
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Assign Listeners to PiP Buttons
+      const toggleBtn = pipWindow.document.getElementById("pip-toggle-btn");
+      const stopBtn = pipWindow.document.getElementById("pip-stop-btn");
+
+      toggleBtn.addEventListener("click", () => {
+        if (isActiveRef.current) {
+          setIsActive(false); // Pause
+        } else {
+          setIsActive(true); // Resume
+        }
+      });
+
+      stopBtn.addEventListener("click", () => {
+        setIsActive(false);
+        setShowModal(true);
+        setModalMode("terminate");
+
+        // Modal PiP mein open nahi ho sakti, toh user ko main screen pe aane ka hint do
+        pipWindow.document.body.innerHTML = `
+          <div style="display:flex;flex-direction:column;justify-content:center;
+          align-items:center;height:100vh;background:#ffffff;color:#0f172a;
+          font-family:system-ui,sans-serif;margin:0;padding:20px;text-align:center;">
+             <h3 style="margin:0 0 10px 0; color:#f43f5e;">Session Stopped</h3>
+             <p style="font-size:14px; color:#64748b; margin:0;">Please go back to the main browser window to save your session.</p>
+          </div>
+        `;
+      });
+
       pipWindow.addEventListener("pagehide", () => {
         pipWindowRef.current = null;
       });
