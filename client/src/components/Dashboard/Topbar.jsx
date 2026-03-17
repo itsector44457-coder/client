@@ -22,12 +22,11 @@ const Topbar = ({
   hasCheckedInToday = true,
   onCheckIn,
 }) => {
-  // Pura Local Storage hata diya, sirf Database Driven State!
   const [liveXp, setLiveXp] = useState(0);
   const [liveStreak, setLiveStreak] = useState(streakCount);
-  const [xpAnimate, setXpAnimate] = useState(false);
+  const [xpAnimate, setXpAnimate] = useState(false); // Animations ke liye
 
-  // 1. Initial Load: Direct fetch from Database!
+  // 1. Initial Load: Fetch XP from backend
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const myId = currentUser?.id || currentUser?._id;
@@ -36,19 +35,19 @@ const Topbar = ({
       axios
         .get(`https://backend-6hhv.onrender.com/api/stats/${myId}`)
         .then((res) => {
-          setLiveXp(res.data.totalReviewed || 0); // Sidha DB se XP
-          setLiveStreak(res.data.streak || 0); // Sidha DB se Streak
+          setLiveXp(res.data.totalReviewed || 0);
+          setLiveStreak(res.data.streak || 0);
         })
         .catch((err) => console.error("Topbar stats error:", err));
     }
   }, []);
 
-  // 2. Real-Time UI Update (XP Gained Event sunega aur +1 karega)
+  // 2. 🚀 Listen for Real-Time XP updates from Flashcards
   useEffect(() => {
     const handleXpGain = () => {
       setLiveXp((prev) => prev + 1);
 
-      // Animation trigger
+      // Trigger a small bump animation
       setXpAnimate(true);
       setTimeout(() => setXpAnimate(false), 300);
     };
@@ -106,7 +105,7 @@ const Topbar = ({
           </span>
         </div>
 
-        {/* 🌟 PURE DATABASE DRIVEN LIVE XP BOX */}
+        {/* 🌟 LIVE GAMIFIED XP BOX WITH ANIMATION */}
         <div
           className={`flex flex-col px-3 py-1.5 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg min-w-[80px] shrink-0 shadow-sm transition-transform duration-200 ${xpAnimate ? "scale-110 shadow-md border-orange-400" : "scale-100"}`}
         >
@@ -120,7 +119,11 @@ const Topbar = ({
 
         <button
           onClick={() => !hasCheckedInToday && onCheckIn && onCheckIn()}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border min-w-[100px] shrink-0 transition-all duration-200 text-left ${hasCheckedInToday ? "bg-emerald-50 border-emerald-100 cursor-default" : "bg-white border-orange-200 hover:border-orange-300 hover:bg-orange-50 cursor-pointer shadow-sm"}`}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border min-w-[100px] shrink-0 transition-all duration-200 text-left ${
+            hasCheckedInToday
+              ? "bg-emerald-50 border-emerald-100 cursor-default"
+              : "bg-white border-orange-200 hover:border-orange-300 hover:bg-orange-50 cursor-pointer shadow-sm"
+          }`}
         >
           {hasCheckedInToday ? (
             <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
@@ -132,12 +135,16 @@ const Topbar = ({
           )}
           <div className="flex flex-col">
             <span
-              className={`text-[10px] font-black uppercase tracking-wider ${hasCheckedInToday ? "text-emerald-600" : "text-orange-500"}`}
+              className={`text-[10px] font-black uppercase tracking-wider ${
+                hasCheckedInToday ? "text-emerald-600" : "text-orange-500"
+              }`}
             >
               {hasCheckedInToday ? "Logged" : "Check In"}
             </span>
             <span
-              className={`text-xs font-black italic ${hasCheckedInToday ? "text-emerald-700" : "text-orange-600"}`}
+              className={`text-xs font-black italic ${
+                hasCheckedInToday ? "text-emerald-700" : "text-orange-600"
+              }`}
             >
               {liveStreak} Days
             </span>
@@ -146,7 +153,11 @@ const Topbar = ({
 
         <button
           onClick={toggleResourceDeck}
-          className={`md:hidden shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors h-full ${resourceDeckEnabled ? "bg-indigo-50 border-indigo-100 text-indigo-600" : "bg-white border-slate-200 text-slate-500"}`}
+          className={`md:hidden shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors h-full ${
+            resourceDeckEnabled
+              ? "bg-indigo-50 border-indigo-100 text-indigo-600"
+              : "bg-white border-slate-200 text-slate-500"
+          }`}
         >
           Mod: {resourceDeckEnabled ? "On" : "Off"}
         </button>
@@ -159,12 +170,18 @@ const Topbar = ({
           >
             <NotebookPen size={18} />
           </button>
+
           <button
             onClick={toggleResourceDeck}
-            className={`px-3 py-1.5 mx-1 rounded-lg border text-xs font-medium transition-colors ${resourceDeckEnabled ? "bg-indigo-50 border-indigo-100 text-indigo-600" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"}`}
+            className={`px-3 py-1.5 mx-1 rounded-lg border text-xs font-medium transition-colors ${
+              resourceDeckEnabled
+                ? "bg-indigo-50 border-indigo-100 text-indigo-600"
+                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+            }`}
           >
             Module {resourceDeckEnabled ? "On" : "Off"}
           </button>
+
           <button
             onClick={() => setSettingsOpen(true)}
             className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
