@@ -13,7 +13,6 @@ const STORAGE_KEY = "skillvault_timer";
 
 const saveToStorage = (data) =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
 const loadFromStorage = () => {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -21,7 +20,6 @@ const loadFromStorage = () => {
     return null;
   }
 };
-
 const clearStorage = () => localStorage.removeItem(STORAGE_KEY);
 
 const StudyTimer = ({
@@ -42,7 +40,7 @@ const StudyTimer = ({
   const startTimeRef = useRef(null);
   const startDateRef = useRef(null);
   const pipWindowRef = useRef(null);
-  const isActiveRef = useRef(isActive); // ✅ PiP ko live status batane ke liye
+  const isActiveRef = useRef(isActive);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const myId = currentUser?.id || currentUser?._id;
@@ -93,12 +91,11 @@ const StudyTimer = ({
         }
       }
     };
-
     return () => {
       worker.terminate();
       URL.revokeObjectURL(workerUrl);
     };
-  }, [isActive]);
+  }, [isActive, setSeconds]);
 
   // ── LAYER 2: Screen Wake-Up Sync ──────────────────────────
   useEffect(() => {
@@ -116,7 +113,7 @@ const StudyTimer = ({
       document.removeEventListener("visibilitychange", handleWakeUp);
       window.removeEventListener("focus", handleWakeUp);
     };
-  }, [isActive]);
+  }, [isActive, setSeconds]);
 
   // ── LAYER 3: localStorage Recovery on Mount ───────────────
   useEffect(() => {
@@ -127,7 +124,6 @@ const StudyTimer = ({
       const exactSeconds = Math.floor((Date.now() - stored.startEpoch) / 1000);
       setSeconds(exactSeconds > 0 ? exactSeconds : 0);
       setIsActive(true);
-
       startTimeRef.current = stored.startEpoch;
       startDateRef.current =
         stored.startDate || new Date().toISOString().split("T")[0];
@@ -135,19 +131,17 @@ const StudyTimer = ({
       setSeconds(stored.seconds);
       startDateRef.current = stored.startDate || null;
     }
-  }, []);
+  }, [setSeconds, setIsActive]);
 
   // ── Start/Stop Logic & Epoch Sync ────────────────────────
   useEffect(() => {
-    isActiveRef.current = isActive; // Update ref for PiP
+    isActiveRef.current = isActive;
     if (isActive) {
       workerRef.current?.postMessage("start");
       const currentStartEpoch = Date.now() - seconds * 1000;
       startTimeRef.current = currentStartEpoch;
-
-      if (!startDateRef.current) {
+      if (!startDateRef.current)
         startDateRef.current = new Date().toISOString().split("T")[0];
-      }
 
       saveToStorage({
         isRunning: true,
@@ -164,30 +158,26 @@ const StudyTimer = ({
         startDate: startDateRef.current,
       });
     }
-  }, [isActive]);
+  }, [isActive, seconds]);
 
-  // ── PiP Sync (Time & Buttons) ─────────────────────────────
+  // ── PiP Sync & Open Logic ─────────────────────────────────
   useEffect(() => {
     if (pipWindowRef.current?.document) {
-      // Update Time
       const timeEl = pipWindowRef.current.document.getElementById("pip-time");
       if (timeEl) timeEl.innerText = formatTime(seconds);
 
-      // Update Play/Pause Button dynamically
       const toggleBtn =
         pipWindowRef.current.document.getElementById("pip-toggle-btn");
       if (toggleBtn) {
         toggleBtn.innerHTML = isActive ? "⏸ Pause" : "▶ Resume";
-        toggleBtn.style.backgroundColor = isActive ? "#f59e0b" : "#4f46e5"; // Amber for Pause, Indigo for Resume
+        toggleBtn.style.backgroundColor = isActive ? "#f59e0b" : "#4f46e5";
       }
     }
   }, [seconds, isActive]);
 
-  // ── 🚀 OPEN FLOATING TIMER (WITH NEW BUTTONS) ─────────────
   const openFloatingTimer = async () => {
-    if (!("documentPictureInPicture" in window)) {
-      return alert("Chrome 116+ required for floating timer!");
-    }
+    if (!("documentPictureInPicture" in window))
+      return alert("Chrome 116+ required!");
     try {
       const pipWindow = await window.documentPictureInPicture.requestWindow({
         width: 320,
@@ -195,20 +185,10 @@ const StudyTimer = ({
       });
       pipWindowRef.current = pipWindow;
 
-      // Injecting HTML with Buttons
       pipWindow.document.body.innerHTML = `
-        <div style="display:flex;flex-direction:column;justify-content:center;
-          align-items:center;height:100vh;background:#ffffff;color:#0f172a;
-          font-family:system-ui,sans-serif;margin:0;overflow:hidden;">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;
-            letter-spacing:1px;margin-bottom:4px;font-weight:600;">
-            Study Focus
-          </div>
-          <div id="pip-time" style="font-size:42px;font-weight:700;color:#4f46e5;
-            font-variant-numeric:tabular-nums;letter-spacing:-1px;margin-bottom:16px;">
-            ${formatTime(seconds)}
-          </div>
-          
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#ffffff;color:#0f172a;font-family:system-ui,sans-serif;margin:0;overflow:hidden;">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600;">Study Focus</div>
+          <div id="pip-time" style="font-size:42px;font-weight:700;color:#4f46e5;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin-bottom:16px;">${formatTime(seconds)}</div>
           <div style="display:flex; gap: 12px;">
             <button id="pip-toggle-btn" style="padding: 8px 16px; border: none; border-radius: 8px; background: ${isActiveRef.current ? "#f59e0b" : "#4f46e5"}; color: white; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s;">
               ${isActiveRef.current ? "⏸ Pause" : "▶ Resume"}
@@ -220,37 +200,21 @@ const StudyTimer = ({
         </div>
       `;
 
-      // Assign Listeners to PiP Buttons
-      const toggleBtn = pipWindow.document.getElementById("pip-toggle-btn");
-      const stopBtn = pipWindow.document.getElementById("pip-stop-btn");
-
-      toggleBtn.addEventListener("click", () => {
-        if (isActiveRef.current) {
-          setIsActive(false); // Pause
-        } else {
-          setIsActive(true); // Resume
-        }
-      });
-
-      stopBtn.addEventListener("click", () => {
-        setIsActive(false);
-        setShowModal(true);
-        setModalMode("terminate");
-
-        // Modal PiP mein open nahi ho sakti, toh user ko main screen pe aane ka hint do
-        pipWindow.document.body.innerHTML = `
-          <div style="display:flex;flex-direction:column;justify-content:center;
-          align-items:center;height:100vh;background:#ffffff;color:#0f172a;
-          font-family:system-ui,sans-serif;margin:0;padding:20px;text-align:center;">
-             <h3 style="margin:0 0 10px 0; color:#f43f5e;">Session Stopped</h3>
-             <p style="font-size:14px; color:#64748b; margin:0;">Please go back to the main browser window to save your session.</p>
-          </div>
-        `;
-      });
-
-      pipWindow.addEventListener("pagehide", () => {
-        pipWindowRef.current = null;
-      });
+      pipWindow.document
+        .getElementById("pip-toggle-btn")
+        .addEventListener("click", () => setIsActive(!isActiveRef.current));
+      pipWindow.document
+        .getElementById("pip-stop-btn")
+        .addEventListener("click", () => {
+          setIsActive(false);
+          setShowModal(true);
+          setModalMode("terminate");
+          pipWindow.document.body.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#ffffff;color:#0f172a;font-family:system-ui,sans-serif;margin:0;padding:20px;text-align:center;"><h3 style="margin:0 0 10px 0; color:#f43f5e;">Session Stopped</h3><p style="font-size:14px; color:#64748b; margin:0;">Please go back to the main window to save.</p></div>`;
+        });
+      pipWindow.addEventListener(
+        "pagehide",
+        () => (pipWindowRef.current = null),
+      );
     } catch (err) {
       console.error("PiP failed:", err);
     }
@@ -258,19 +222,10 @@ const StudyTimer = ({
 
   const handleFinalSave = async (isTermination) => {
     if (seconds < 1) return alert("Bhai thoda toh padh lo! 😂");
-
-    if (seconds > 86400) {
-      const confirm = window.confirm(
-        "Bhai 24 ghante se zyada?! Neend nahi aayi? Save kar dete hain! 😭",
-      );
-      if (!confirm) return;
-    }
-
     try {
       setSaving(true);
       const sessionDate =
         startDateRef.current || new Date().toISOString().split("T")[0];
-
       await axios.post("https://backend-6hhv.onrender.com/api/sessions/save", {
         userId: myId,
         duration: seconds,
@@ -284,36 +239,28 @@ const StudyTimer = ({
         isStrictValid: feedback.work.trim().length > 5,
       });
 
-      if (isTermination && battleActive) {
+      if (isTermination && battleActive)
         await onBattleLose({
           battleId: battle._id,
           loserId: myId,
           reason: "Session Terminated",
         });
-      }
 
-      onSessionSaved(seconds);
+      onSessionSaved?.(seconds);
       setSeconds(0);
       setIsActive(false);
       startTimeRef.current = null;
       startDateRef.current = null;
       clearStorage();
       workerRef.current?.postMessage("stop");
-
       setShowModal(false);
       setFeedback({ reason: "", work: "" });
-
-      if (pipWindowRef.current) {
-        pipWindowRef.current.close();
-        pipWindowRef.current = null;
-      }
-
+      if (pipWindowRef.current) pipWindowRef.current.close();
       alert("Session Synced to Hub! 🚀");
     } catch (err) {
       alert(
         `Network Error: Data save nahi hua. Aapka timer paused hai, internet check karke wapas try karo!`,
       );
-      console.error(err);
     } finally {
       setSaving(false);
     }
@@ -321,7 +268,6 @@ const StudyTimer = ({
 
   return (
     <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm">
-      {/* Top Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -330,12 +276,10 @@ const StudyTimer = ({
             </h3>
             <button
               onClick={openFloatingTimer}
-              title="Pop out Floating Timer"
               className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-1 rounded transition-colors"
             >
               <ExternalLink size={14} />
             </button>
-
             {isActive && (
               <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
@@ -343,20 +287,12 @@ const StudyTimer = ({
               </span>
             )}
           </div>
-
           <div className="text-4xl sm:text-5xl font-bold text-slate-800 font-mono tracking-tight leading-none">
             {formatTime(seconds)}
           </div>
-
-          {startDateRef.current && (
-            <div className="text-[10px] text-slate-400 mt-1 font-medium">
-              Started: {startDateRef.current}
-            </div>
-          )}
         </div>
-
         {battleActive && (
-          <div className="bg-rose-50 border border-rose-100 px-3 py-1.5 rounded-lg flex items-center gap-2 self-start sm:self-auto">
+          <div className="bg-rose-50 border border-rose-100 px-3 py-1.5 rounded-lg flex items-center gap-2">
             <Swords size={14} className="text-rose-500" />
             <span className="text-xs font-semibold text-rose-600">
               Vs {opponent?.name}
@@ -365,7 +301,6 @@ const StudyTimer = ({
         )}
       </div>
 
-      {/* Controls */}
       <div className="flex gap-3">
         {!isActive ? (
           <button
@@ -388,7 +323,6 @@ const StudyTimer = ({
             Pause
           </button>
         )}
-
         {(isActive || seconds > 0) && (
           <button
             onClick={() => {
@@ -404,14 +338,12 @@ const StudyTimer = ({
         )}
       </div>
 
-      {/* Save Modal */}
       {showModal && (
         <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-sm rounded-2xl p-6 sm:p-8 shadow-xl animate-in zoom-in-95 duration-200">
             <h4 className="text-lg font-bold text-slate-800 mb-1">
               {modalMode === "terminate" ? "End Session" : "Pause Session"}
             </h4>
-
             <div className="bg-slate-50 rounded-xl p-3 mb-4 flex justify-between items-center">
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
@@ -421,20 +353,10 @@ const StudyTimer = ({
                   {formatTime(seconds)}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                  Session Date
-                </p>
-                <p className="text-sm font-bold text-slate-700">
-                  {startDateRef.current ||
-                    new Date().toISOString().split("T")[0]}
-                </p>
-              </div>
             </div>
-
             <div className="space-y-3">
               <input
-                placeholder="Why stopping? (e.g., Break, Done)"
+                placeholder="Why stopping?"
                 className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-200"
                 value={feedback.reason}
                 onChange={(e) =>
@@ -450,7 +372,6 @@ const StudyTimer = ({
                 }
               />
             </div>
-
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => handleFinalSave(modalMode === "terminate")}
@@ -464,9 +385,7 @@ const StudyTimer = ({
                 )}
               </button>
               <button
-                onClick={() => {
-                  setShowModal(false);
-                }}
+                onClick={() => setShowModal(false)}
                 className="flex-1 bg-white text-slate-600 border border-slate-200 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
               >
                 Cancel
@@ -478,5 +397,4 @@ const StudyTimer = ({
     </div>
   );
 };
-
 export default StudyTimer;

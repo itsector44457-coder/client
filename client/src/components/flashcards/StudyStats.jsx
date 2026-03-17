@@ -15,7 +15,6 @@ import {
 import axios from "axios";
 
 const API = "https://backend-6hhv.onrender.com/api/stats";
-
 const MONTHS_SHORT = [
   "Jan",
   "Feb",
@@ -103,7 +102,6 @@ function StudyHeatmap({ studyData = [] }) {
   const avgOnActive =
     activeDays > 0 ? (totalHours / activeDays).toFixed(1) : "0";
 
-  // ✅ FIX: Timezone aware "Today" calculation
   const localToday = new Date();
   localToday.setMinutes(
     localToday.getMinutes() - localToday.getTimezoneOffset(),
@@ -119,7 +117,7 @@ function StudyHeatmap({ studyData = [] }) {
         <div className="flex items-center gap-2">
           <Calendar size={18} className="text-indigo-500" />
           <span className="text-xs font-black uppercase tracking-widest text-slate-800 italic">
-            Activity Matrix (365 Days)
+            Activity Matrix
           </span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -252,7 +250,7 @@ function StudyHeatmap({ studyData = [] }) {
               {tooltip.hours === 0 ? (
                 <span className="text-slate-400">No activity</span>
               ) : (
-                <span>{tooltip.hours} unit(s) studied</span>
+                <span>{tooltip.hours} units studied</span>
               )}
             </div>
           )}
@@ -354,11 +352,10 @@ export default function StudyStats() {
       <div className="h-full flex flex-col items-center justify-center opacity-50 gap-4">
         <Loader2 className="animate-spin text-indigo-600" size={40} />
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          Analyzing Neural Patterns...
+          Analyzing Patterns...
         </p>
       </div>
     );
-
   if (!stats)
     return (
       <div className="h-full flex items-center justify-center text-slate-400 text-sm font-bold uppercase italic">
@@ -368,21 +365,26 @@ export default function StudyStats() {
 
   const { heatmap, deckStats, totalReviewed, overallRetention, streak } = stats;
 
-  // ✅ FIX: Enhanced Logic for converting reviewed cards → study matrix units
+  // 🚀 THE ULTIMATE HEATMAP LINKING LOGIC (Connects Timer & Cards)
   const heatmapStudyData = heatmap.map((s) => {
-    // Force date format to just YYYY-MM-DD
     const safeDate = s.date.includes("T") ? s.date.split("T")[0] : s.date;
 
-    // Calculate hours, but force minimum 1 if they studied anything
-    let calculatedHours = Math.round((s.reviewed || 0) / 8);
-    if (s.reviewed > 0 && calculatedHours === 0) {
-      calculatedHours = 1;
+    // Timer Logic: totalStudySeconds ko Hours me convert karo
+    const timerSeconds = s.totalStudySeconds || 0;
+    const timerHours = Math.floor(timerSeconds / 3600);
+
+    // Cards Logic: 15 Cards = 1 Hour equivalent
+    const cardsEquivalentHours = Math.floor((s.reviewed || 0) / 15);
+
+    // Dono ka total score
+    let totalScore = timerHours + cardsEquivalentHours;
+
+    // Minimum effort fallback (15 min timer OR thode bhi cards = 1 box color)
+    if (totalScore === 0 && (timerSeconds > 900 || s.reviewed > 0)) {
+      totalScore = 1;
     }
 
-    return {
-      date: safeDate,
-      studyHours: Math.min(8, calculatedHours),
-    };
+    return { date: safeDate, studyHours: Math.min(8, totalScore) };
   });
 
   return (
@@ -442,11 +444,7 @@ export default function StudyStats() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              activeTab === tab
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-slate-400 hover:text-indigo-400"
-            }`}
+            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-indigo-400"}`}
           >
             {tab === "overview"
               ? "Overview"
@@ -573,7 +571,7 @@ export default function StudyStats() {
       {activeTab === "weak" && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {deckStats.length === 0 ? (
-            <EmptyState text="No weak cards found — you're crushing it!" />
+            <EmptyState text="No weak cards found" />
           ) : (
             deckStats.flatMap((d) =>
               d.weakCards.length === 0
@@ -589,7 +587,7 @@ export default function StudyStats() {
                     ...d.weakCards.map((card) => (
                       <div
                         key={card._id}
-                        className="bg-white border-2 border-orange-100 rounded-[2rem] p-5 flex items-start gap-4 shadow-sm hover:shadow-orange-100 transition-shadow"
+                        className="bg-white border-2 border-orange-100 rounded-[2rem] p-5 flex items-start gap-4 shadow-sm"
                       >
                         <div className="w-10 h-10 bg-orange-50 rounded-2xl flex items-center justify-center shrink-0 border border-orange-100">
                           <AlertTriangle
@@ -604,9 +602,6 @@ export default function StudyStats() {
                           <div className="flex gap-2 mt-3 flex-wrap">
                             <span className="text-[9px] font-black uppercase tracking-widest text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
                               Ease: {card.easeFactor}
-                            </span>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                              Interval: {card.interval}d
                             </span>
                           </div>
                         </div>
@@ -625,7 +620,6 @@ function Chip({ color, label }) {
   const map = {
     emerald: "bg-emerald-50 text-emerald-600 border border-emerald-100",
     orange: "bg-orange-50 text-orange-600 border border-orange-100",
-    slate: "bg-slate-50 text-slate-500 border border-slate-100",
     indigo: "bg-indigo-50 text-indigo-600 border border-indigo-100",
   };
   return (
