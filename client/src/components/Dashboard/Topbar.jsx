@@ -2,22 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Flame,
+  Zap,
   NotebookPen,
   Settings,
+  Trophy,
   CheckCircle2,
-  Zap,
-  Layers,
 } from "lucide-react";
-
-const injectFonts = () => {
-  if (document.getElementById("topbar-fonts")) return;
-  const link = document.createElement("link");
-  link.id = "topbar-fonts";
-  link.rel = "stylesheet";
-  link.href =
-    "https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap";
-  document.head.appendChild(link);
-};
 
 const Topbar = ({
   currentUserName,
@@ -34,15 +24,13 @@ const Topbar = ({
 }) => {
   const [liveXp, setLiveXp] = useState(0);
   const [liveStreak, setLiveStreak] = useState(streakCount);
-  const [xpAnimate, setXpAnimate] = useState(false);
+  const [xpAnimate, setXpAnimate] = useState(false); // Animations ke liye
 
-  useEffect(() => {
-    injectFonts();
-  }, []);
-
+  // 1. Initial Load: Fetch XP from backend
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const myId = currentUser?.id || currentUser?._id;
+
     if (myId) {
       axios
         .get(`https://backend-6hhv.onrender.com/api/stats/${myId}`)
@@ -54,331 +42,156 @@ const Topbar = ({
     }
   }, []);
 
+  // 2. 🚀 Listen for Real-Time XP updates from Flashcards
   useEffect(() => {
     const handleXpGain = () => {
       setLiveXp((prev) => prev + 1);
+
+      // Trigger a small bump animation
       setXpAnimate(true);
-      setTimeout(() => setXpAnimate(false), 400);
+      setTimeout(() => setXpAnimate(false), 300);
     };
+
     window.addEventListener("xpGained", handleXpGain);
     return () => window.removeEventListener("xpGained", handleXpGain);
   }, []);
 
   const formatHours = (sec) => {
-    if (!sec || isNaN(sec)) return "0.0h";
-    const h = sec / 3600;
-    return Number.isInteger(h) ? `${h}h` : `${h.toFixed(1)}h`;
-  };
-
-  const initials = currentUserName?.[0]?.toUpperCase() || "U";
-
-  // ── Shared style tokens ──────────────────────────────────────────────────
-  const pill = {
-    base: {
-      display: "flex",
-      flexDirection: "column",
-      padding: "7px 13px",
-      borderRadius: 11,
-      border: "1px solid rgba(255,255,255,0.08)",
-      background: "rgba(255,255,255,0.04)",
-      minWidth: 68,
-      flexShrink: 0,
-      gap: 2,
-    },
-    label: {
-      fontSize: 9,
-      fontWeight: 600,
-      letterSpacing: "0.12em",
-      textTransform: "uppercase",
-      color: "rgba(255,255,255,0.35)",
-      fontFamily: "'DM Sans', sans-serif",
-    },
-    value: {
-      fontSize: 15,
-      fontWeight: 700,
-      color: "#f0eeff",
-      fontFamily: "'Syne', sans-serif",
-      lineHeight: 1,
-    },
-  };
-
-  const iconBtn = {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.04)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    color: "rgba(255,255,255,0.45)",
-    transition: "all 0.15s",
-    flexShrink: 0,
+    if (!sec || isNaN(sec)) return "0h";
+    const hours = sec / 3600;
+    return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
   };
 
   return (
-    <>
-      <style>{`
-        @keyframes xp-pop { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
-        .xp-pop { animation: xp-pop 0.35s ease; }
-        .tb-icon-btn:hover { background: rgba(139,92,246,0.15) !important; border-color: rgba(139,92,246,0.3) !important; color: #c4b5fd !important; }
-        .tb-deck-btn:hover { background: rgba(139,92,246,0.12) !important; border-color: rgba(139,92,246,0.3) !important; color: #c4b5fd !important; }
-        .tb-checkin:hover { border-color: rgba(251,146,60,0.4) !important; background: rgba(251,146,60,0.08) !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-
-      <div
-        style={{
-          background: "rgba(14,12,26,0.92)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: "10px 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-          fontFamily: "'DM Sans', sans-serif",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* ── Left: Avatar + Name ─────────────────────────────────────────── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexShrink: 0,
-          }}
-        >
-          {/* Avatar */}
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #6355d0, #3d2db0)",
-              border: "1px solid rgba(139,92,246,0.4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 700,
-              fontSize: 14,
-              color: "#fff",
-              flexShrink: 0,
-            }}
-          >
-            {initials}
+    <div className="bg-white/90 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-50">
+      <div className="flex items-center justify-between w-full md:w-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm shrink-0">
+            {currentUserName?.[0]?.toUpperCase() || "C"}
           </div>
-
-          {/* Name + field */}
-          <div style={{ minWidth: 0 }}>
-            <p
-              style={{
-                fontFamily: "'Syne', sans-serif",
-                fontSize: 14,
-                fontWeight: 700,
-                color: "#f0eeff",
-                margin: 0,
-                lineHeight: 1.2,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                maxWidth: 160,
-              }}
-            >
+          <div className="min-w-0">
+            <h2 className="font-semibold text-slate-800 text-sm sm:text-base tracking-tight truncate">
               {currentUserName || "Commander"}
-            </p>
-            <p
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,0.3)",
-                margin: 0,
-                marginTop: 1,
-                fontWeight: 500,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                maxWidth: 160,
-              }}
-            >
+            </h2>
+            <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
               {myField || "General Studies"}
             </p>
           </div>
-
-          {/* Thin divider */}
-          <div
-            style={{
-              width: 1,
-              height: 28,
-              background: "rgba(255,255,255,0.07)",
-              marginLeft: 4,
-              flexShrink: 0,
-            }}
-          />
         </div>
 
-        {/* ── Centre: Stat Pills ──────────────────────────────────────────── */}
-        <div
-          className="no-scrollbar"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 7,
-            flex: 1,
-            overflowX: "auto",
-          }}
-        >
-          {/* Focus time */}
-          <div style={pill.base}>
-            <span style={pill.label}>Focus</span>
-            <span style={pill.value}>{formatHours(todayDeepSeconds)}</span>
-          </div>
-
-          {/* XP */}
-          <div
-            className={xpAnimate ? "xp-pop" : ""}
-            style={{
-              ...pill.base,
-              background: xpAnimate
-                ? "rgba(251,146,60,0.15)"
-                : "rgba(251,146,60,0.07)",
-              border: `1px solid ${xpAnimate ? "rgba(251,146,60,0.4)" : "rgba(251,146,60,0.15)"}`,
-              transition: "background 0.2s, border-color 0.2s",
-            }}
-          >
-            <span
-              style={{
-                ...pill.label,
-                color: "rgba(251,146,60,0.7)",
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-              }}
-            >
-              <Zap size={9} color="rgba(251,146,60,0.8)" />
-              XP
-            </span>
-            <span style={{ ...pill.value, color: "#fb923c" }}>{liveXp}</span>
-          </div>
-
-          {/* Streak / Check-in */}
+        <div className="flex md:hidden items-center gap-1.5 shrink-0">
           <button
-            className={hasCheckedInToday ? "" : "tb-checkin"}
-            onClick={() => !hasCheckedInToday && onCheckIn?.()}
-            style={{
-              ...pill.base,
-              background: hasCheckedInToday
-                ? "rgba(52,211,153,0.07)"
-                : "rgba(251,146,60,0.07)",
-              border: `1px solid ${hasCheckedInToday ? "rgba(52,211,153,0.2)" : "rgba(251,146,60,0.2)"}`,
-              cursor: hasCheckedInToday ? "default" : "pointer",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              padding: "7px 13px",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-          >
-            {hasCheckedInToday ? (
-              <CheckCircle2 size={14} color="#34d399" />
-            ) : (
-              <Flame
-                size={14}
-                color="#fb923c"
-                style={{ animation: "pulse 1.5s infinite" }}
-              />
-            )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span
-                style={{
-                  ...pill.label,
-                  color: hasCheckedInToday
-                    ? "rgba(52,211,153,0.7)"
-                    : "rgba(251,146,60,0.7)",
-                }}
-              >
-                {hasCheckedInToday ? "Logged" : "Check In"}
-              </span>
-              <span
-                style={{
-                  ...pill.value,
-                  fontSize: 14,
-                  color: hasCheckedInToday ? "#34d399" : "#fb923c",
-                }}
-              >
-                {liveStreak}d
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* ── Right: Action buttons ───────────────────────────────────────── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            flexShrink: 0,
-          }}
-        >
-          {/* Quick capture */}
-          <button
-            className="tb-icon-btn"
             onClick={() => setQuickCaptureOpen(true)}
-            style={iconBtn}
-            title="Quick Notes"
+            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
           >
-            <NotebookPen size={15} />
+            <NotebookPen size={18} />
           </button>
-
-          {/* Resource deck toggle */}
           <button
-            className="tb-deck-btn"
-            onClick={toggleResourceDeck}
-            style={{
-              ...iconBtn,
-              width: "auto",
-              padding: "0 12px",
-              fontSize: 11,
-              fontWeight: 600,
-              gap: 5,
-              color: resourceDeckEnabled ? "#c4b5fd" : "rgba(255,255,255,0.35)",
-              background: resourceDeckEnabled
-                ? "rgba(139,92,246,0.12)"
-                : "rgba(255,255,255,0.04)",
-              border: `1px solid ${resourceDeckEnabled ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.08)"}`,
-              transition: "all 0.15s",
-            }}
-            title="Toggle Resource Deck"
-          >
-            <Layers size={13} />
-            <span
-              className="hidden-mobile"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
-              Module {resourceDeckEnabled ? "On" : "Off"}
-            </span>
-          </button>
-
-          {/* Settings */}
-          <button
-            className="tb-icon-btn"
             onClick={() => setSettingsOpen(true)}
-            style={iconBtn}
-            title="Settings"
+            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
           >
-            <Settings size={15} />
+            <Settings size={18} />
           </button>
         </div>
       </div>
-    </>
+
+      <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+        <div className="flex flex-col px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg min-w-[80px] shrink-0">
+          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+            Focus
+          </span>
+          <span className="text-sm font-semibold text-slate-700">
+            {formatHours(todayDeepSeconds)}
+          </span>
+        </div>
+
+        {/* 🌟 LIVE GAMIFIED XP BOX WITH ANIMATION */}
+        <div
+          className={`flex flex-col px-3 py-1.5 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg min-w-[80px] shrink-0 shadow-sm transition-transform duration-200 ${xpAnimate ? "scale-110 shadow-md border-orange-400" : "scale-100"}`}
+        >
+          <span className="text-[10px] font-black text-orange-500 uppercase tracking-wider flex items-center gap-1">
+            ⭐ XP
+          </span>
+          <span className="text-sm font-black text-orange-600 italic">
+            {liveXp}
+          </span>
+        </div>
+
+        <button
+          onClick={() => !hasCheckedInToday && onCheckIn && onCheckIn()}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border min-w-[100px] shrink-0 transition-all duration-200 text-left ${
+            hasCheckedInToday
+              ? "bg-emerald-50 border-emerald-100 cursor-default"
+              : "bg-white border-orange-200 hover:border-orange-300 hover:bg-orange-50 cursor-pointer shadow-sm"
+          }`}
+        >
+          {hasCheckedInToday ? (
+            <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+          ) : (
+            <Flame
+              size={16}
+              className="text-orange-500 shrink-0 animate-pulse"
+            />
+          )}
+          <div className="flex flex-col">
+            <span
+              className={`text-[10px] font-black uppercase tracking-wider ${
+                hasCheckedInToday ? "text-emerald-600" : "text-orange-500"
+              }`}
+            >
+              {hasCheckedInToday ? "Logged" : "Check In"}
+            </span>
+            <span
+              className={`text-xs font-black italic ${
+                hasCheckedInToday ? "text-emerald-700" : "text-orange-600"
+              }`}
+            >
+              {liveStreak} Days
+            </span>
+          </div>
+        </button>
+
+        <button
+          onClick={toggleResourceDeck}
+          className={`md:hidden shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors h-full ${
+            resourceDeckEnabled
+              ? "bg-indigo-50 border-indigo-100 text-indigo-600"
+              : "bg-white border-slate-200 text-slate-500"
+          }`}
+        >
+          Mod: {resourceDeckEnabled ? "On" : "Off"}
+        </button>
+
+        <div className="hidden md:flex items-center gap-1 pl-3 ml-1 border-l border-slate-100 shrink-0">
+          <button
+            onClick={() => setQuickCaptureOpen(true)}
+            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+            title="Quick Notes"
+          >
+            <NotebookPen size={18} />
+          </button>
+
+          <button
+            onClick={toggleResourceDeck}
+            className={`px-3 py-1.5 mx-1 rounded-lg border text-xs font-medium transition-colors ${
+              resourceDeckEnabled
+                ? "bg-indigo-50 border-indigo-100 text-indigo-600"
+                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+            }`}
+          >
+            Module {resourceDeckEnabled ? "On" : "Off"}
+          </button>
+
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+            title="Settings"
+          >
+            <Settings size={18} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
