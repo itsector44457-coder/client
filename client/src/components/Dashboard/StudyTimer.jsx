@@ -11,14 +11,20 @@ import {
 
 const STORAGE_KEY = "skillvault_timer";
 
-const saveToStorage = (data) =>
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+// 🚀 Helper to smoothly update storage without wiping out new keys
 const loadFromStorage = () => {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
   } catch {
     return null;
   }
+};
+const updateStorage = (updates) => {
+  const existing = loadFromStorage() || {};
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ ...existing, ...updates }),
+  );
 };
 const clearStorage = () => localStorage.removeItem(STORAGE_KEY);
 
@@ -32,15 +38,33 @@ const StudyTimer = ({
   onBattleLose,
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState("pause");
+  const [modalMode, setModalMode] = useState("pauseRequest"); // 'pauseRequest' or 'terminate'
   const [feedback, setFeedback] = useState({ reason: "", work: "" });
   const [saving, setSaving] = useState(false);
+
+  // 🚀 New States for True Pause Tracking
+  const [pauseLogs, setPauseLogs] = useState(
+    () => loadFromStorage()?.pauseLogs || [],
+  );
+  const [pendingPause, setPendingPause] = useState(
+    () => loadFromStorage()?.pendingPause || null,
+  );
 
   const workerRef = useRef(null);
   const startTimeRef = useRef(null);
   const startDateRef = useRef(null);
   const pipWindowRef = useRef(null);
   const isActiveRef = useRef(isActive);
+
+  const pauseLogsRef = useRef(pauseLogs);
+  const pendingPauseRef = useRef(pendingPause);
+
+  useEffect(() => {
+    pauseLogsRef.current = pauseLogs;
+  }, [pauseLogs]);
+  useEffect(() => {
+    pendingPauseRef.current = pendingPause;
+  }, [pendingPause]);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const myId = currentUser?.id || currentUser?._id;
@@ -55,6 +79,17 @@ const StudyTimer = ({
     const m = Math.floor((s % 3600) / 60);
     const rs = s % 60;
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${rs.toString().padStart(2, "0")}`;
+  };
+
+  const formatTimeShort = (secs) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    let str = "";
+    if (h > 0) str += `${h}h `;
+    if (m > 0) str += `${m}m `;
+    if (s > 0 || str === "") str += `${s}s`;
+    return str.trim();
   };
 
   // ── LAYER 1: Inline Web Worker ────────────────────────────
@@ -75,14 +110,14 @@ const StudyTimer = ({
     workerRef.current = worker;
 
     worker.onmessage = () => {
-      if (startTimeRef.current && isActive) {
+      if (startTimeRef.current && isActiveRef.current) {
         const currentSeconds = Math.floor(
           (Date.now() - startTimeRef.current) / 1000,
         );
         setSeconds(currentSeconds);
 
         if (currentSeconds % 5 === 0) {
-          saveToStorage({
+          updateStorage({
             isRunning: true,
             seconds: currentSeconds,
             startEpoch: startTimeRef.current,
@@ -95,12 +130,12 @@ const StudyTimer = ({
       worker.terminate();
       URL.revokeObjectURL(workerUrl);
     };
-  }, [isActive, setSeconds]);
+  }, [setSeconds]);
 
   // ── LAYER 2: Screen Wake-Up Sync ──────────────────────────
   useEffect(() => {
     const handleWakeUp = () => {
-      if (!document.hidden && isActive && startTimeRef.current) {
+      if (!document.hidden && isActiveRef.current && startTimeRef.current) {
         const exactSeconds = Math.floor(
           (Date.now() - startTimeRef.current) / 1000,
         );
@@ -113,7 +148,7 @@ const StudyTimer = ({
       document.removeEventListener("visibilitychange", handleWakeUp);
       window.removeEventListener("focus", handleWakeUp);
     };
-  }, [isActive, setSeconds]);
+  }, [setSeconds]);
 
   // ── LAYER 3: localStorage Recovery on Mount ───────────────
   useEffect(() => {
@@ -143,7 +178,7 @@ const StudyTimer = ({
       if (!startDateRef.current)
         startDateRef.current = new Date().toISOString().split("T")[0];
 
-      saveToStorage({
+      updateStorage({
         isRunning: true,
         seconds,
         startEpoch: currentStartEpoch,
@@ -151,14 +186,65 @@ const StudyTimer = ({
       });
     } else {
       workerRef.current?.postMessage("stop");
-      saveToStorage({
+      updateStorage({
         isRunning: false,
         seconds,
         startEpoch: startTimeRef.current,
         startDate: startDateRef.current,
       });
     }
-  }, [isActive, seconds]);
+  }, [isActive]); // Removes 'seconds' to avoid firing every tick
+
+  // ── True Pause Handling ──────────────────────────────────
+  const confirmPause = () => {
+    if (!feedback.reason.trim()) {
+      alert("Commander, please provide a reason for pausing!");
+      return;
+    }
+    // STOP the timer ONLY after reason is given
+    setIsActive(false);
+    const pStart = Date.now();
+    const pData = { start: pStart, reason: feedback.reason.trim() };
+
+    setPendingPause(pData);
+    updateStorage({ isRunning: false, pendingPause: pData });
+    setShowModal(false);
+    setFeedback({ reason: "", work: "" });
+  };
+
+  const handleResume = () => {
+    setIsActive(true);
+    if (pendingPauseRef.current) {
+      const pDuration = Math.floor(
+        (Date.now() - pendingPauseRef.current.start) / 1000,
+      );
+      const newLogs = [
+        ...pauseLogsRef.current,
+        { reason: pendingPauseRef.current.reason, duration: pDuration },
+      ];
+
+      setPauseLogs(newLogs);
+      setPendingPause(null);
+      updateStorage({
+        pauseLogs: newLogs,
+        pendingPause: null,
+        isRunning: true,
+      });
+    }
+  };
+
+  const handlePipToggle = () => {
+    if (isActiveRef.current) {
+      // Quick Pause from PiP
+      const pStart = Date.now();
+      const pData = { start: pStart, reason: "Quick Pause (PiP)" };
+      setPendingPause(pData);
+      setIsActive(false);
+      updateStorage({ isRunning: false, pendingPause: pData });
+    } else {
+      handleResume();
+    }
+  };
 
   // ── PiP Sync & Open Logic ─────────────────────────────────
   useEffect(() => {
@@ -202,7 +288,7 @@ const StudyTimer = ({
 
       pipWindow.document
         .getElementById("pip-toggle-btn")
-        .addEventListener("click", () => setIsActive(!isActiveRef.current));
+        .addEventListener("click", handlePipToggle);
       pipWindow.document
         .getElementById("pip-stop-btn")
         .addEventListener("click", () => {
@@ -220,35 +306,61 @@ const StudyTimer = ({
     }
   };
 
-  const handleFinalSave = async (isTermination) => {
+  const handleFinalSave = async () => {
     if (seconds < 1) return alert("Bhai thoda toh padh lo! 😂");
     try {
       setSaving(true);
       const sessionDate =
         startDateRef.current || new Date().toISOString().split("T")[0];
+
+      // Build Beautiful String for History Page (HACK FOR DB)
+      let finalWorkStr =
+        feedback.work.trim() || "Deep Study Protocol Completed";
+      let allPauses = [...pauseLogs];
+
+      // If they stop while paused, log that ongoing pause too
+      if (pendingPause) {
+        const pDuration = Math.floor((Date.now() - pendingPause.start) / 1000);
+        allPauses.push({ reason: pendingPause.reason, duration: pDuration });
+      }
+
+      if (allPauses.length > 0) {
+        finalWorkStr +=
+          `\n\n⏸ BREAK LOGS:\n` +
+          allPauses
+            .map((p) => `- ${p.reason} (${formatTimeShort(p.duration)})`)
+            .join(`\n`);
+      }
+
+      const dynamicBreakReason =
+        allPauses.length > 0
+          ? `Completed with ${allPauses.length} pauses`
+          : "Continuous Focus";
+
       await axios.post("https://backend-6hhv.onrender.com/api/sessions/save", {
         userId: myId,
         duration: seconds,
-        breakReason:
-          feedback.reason.trim() ||
-          (isTermination ? "Commander Exit" : "System Pause"),
-        workDone: feedback.work.trim() || "Deep Study Protocol Completed",
+        breakReason: dynamicBreakReason,
+        workDone: finalWorkStr,
         date: sessionDate,
         startTime: new Date(Date.now() - seconds * 1000).toISOString(),
         endTime: new Date().toISOString(),
         isStrictValid: feedback.work.trim().length > 5,
       });
 
-      if (isTermination && battleActive)
+      if (battleActive) {
         await onBattleLose({
           battleId: battle._id,
           loserId: myId,
           reason: "Session Terminated",
         });
+      }
 
       onSessionSaved?.(seconds);
       setSeconds(0);
       setIsActive(false);
+      setPauseLogs([]);
+      setPendingPause(null);
       startTimeRef.current = null;
       startDateRef.current = null;
       clearStorage();
@@ -286,6 +398,11 @@ const StudyTimer = ({
                 LIVE
               </span>
             )}
+            {!isActive && pendingPause && (
+              <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                PAUSED
+              </span>
+            )}
           </div>
           <div className="text-4xl sm:text-5xl font-bold text-slate-800 font-mono tracking-tight leading-none">
             {formatTime(seconds)}
@@ -301,21 +418,24 @@ const StudyTimer = ({
         )}
       </div>
 
+      {/* Buttons Logic */}
       <div className="flex gap-3">
         {!isActive ? (
           <button
-            onClick={() => setIsActive(true)}
+            onClick={() => {
+              if (pendingPause) handleResume();
+              else setIsActive(true);
+            }}
             className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
           >
             <Play size={16} fill="currentColor" />
-            {seconds > 0 ? "Resume" : "Start Focus"}
+            {seconds > 0 ? "Resume Focus" : "Start Focus"}
           </button>
         ) : (
           <button
             onClick={() => {
-              setIsActive(false);
+              setModalMode("pauseRequest");
               setShowModal(true);
-              setModalMode("pause");
             }}
             className="flex-1 bg-amber-500 text-white py-3 rounded-lg font-semibold text-sm hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
           >
@@ -323,12 +443,13 @@ const StudyTimer = ({
             Pause
           </button>
         )}
+
         {(isActive || seconds > 0) && (
           <button
             onClick={() => {
-              setIsActive(false);
-              setShowModal(true);
+              setIsActive(false); // Stop timer while they fill completion report
               setModalMode("terminate");
+              setShowModal(true);
             }}
             className="w-14 sm:w-16 bg-white text-rose-500 border border-rose-200 hover:bg-rose-50 rounded-lg flex items-center justify-center transition-colors shrink-0"
             title="Stop & Save"
@@ -338,59 +459,100 @@ const StudyTimer = ({
         )}
       </div>
 
+      {/* Dynamic Modals */}
       {showModal && (
         <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-sm rounded-2xl p-6 sm:p-8 shadow-xl animate-in zoom-in-95 duration-200">
-            <h4 className="text-lg font-bold text-slate-800 mb-1">
-              {modalMode === "terminate" ? "End Session" : "Pause Session"}
-            </h4>
-            <div className="bg-slate-50 rounded-xl p-3 mb-4 flex justify-between items-center">
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                  Time Logged
+            {modalMode === "pauseRequest" && (
+              <>
+                <h4 className="text-lg font-bold text-slate-800 mb-1">
+                  Pause Session
+                </h4>
+                <p className="text-[12px] text-slate-500 mb-5 leading-tight">
+                  Timer is still running. Please provide a reason to initiate
+                  the pause.
                 </p>
-                <p className="text-lg font-bold text-indigo-600 font-mono">
-                  {formatTime(seconds)}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <input
-                placeholder="Why stopping?"
-                className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-200"
-                value={feedback.reason}
-                onChange={(e) =>
-                  setFeedback({ ...feedback, reason: e.target.value })
-                }
-              />
-              <textarea
-                placeholder="What did you work on?"
-                className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none border border-slate-200"
-                value={feedback.work}
-                onChange={(e) =>
-                  setFeedback({ ...feedback, work: e.target.value })
-                }
-              />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => handleFinalSave(modalMode === "terminate")}
-                disabled={saving}
-                className="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors flex justify-center items-center"
-              >
-                {saving ? (
-                  <Loader2 className="animate-spin w-4 h-4" />
-                ) : (
-                  "Save Log"
-                )}
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 bg-white text-slate-600 border border-slate-200 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
+                <input
+                  autoFocus
+                  placeholder="Why are you pausing? (e.g., Water break)"
+                  className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-amber-500 border border-slate-200 mb-6"
+                  value={feedback.reason}
+                  onChange={(e) =>
+                    setFeedback({ ...feedback, reason: e.target.value })
+                  }
+                  onKeyDown={(e) => e.key === "Enter" && confirmPause()}
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={confirmPause}
+                    className="flex-1 bg-amber-500 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-amber-600 transition-colors flex justify-center items-center"
+                  >
+                    Confirm Pause
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setFeedback({ reason: "", work: "" });
+                    }}
+                    className="flex-1 bg-white text-slate-600 border border-slate-200 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modalMode === "terminate" && (
+              <>
+                <h4 className="text-lg font-bold text-slate-800 mb-1">
+                  End Session
+                </h4>
+                <div className="bg-slate-50 rounded-xl p-3 mb-4 flex justify-between items-center mt-2">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                      Time Logged
+                    </p>
+                    <p className="text-lg font-bold text-indigo-600 font-mono">
+                      {formatTime(seconds)}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <textarea
+                    autoFocus
+                    placeholder="What did you accomplish in this session?"
+                    className="w-full bg-slate-50 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none border border-slate-200"
+                    value={feedback.work}
+                    onChange={(e) =>
+                      setFeedback({ ...feedback, work: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleFinalSave}
+                    disabled={saving}
+                    className="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors flex justify-center items-center"
+                  >
+                    {saving ? (
+                      <Loader2 className="animate-spin w-4 h-4" />
+                    ) : (
+                      "Save Log"
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setFeedback({ reason: "", work: "" });
+                      if (!pendingPause) setIsActive(true);
+                    }}
+                    className="flex-1 bg-white text-slate-600 border border-slate-200 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

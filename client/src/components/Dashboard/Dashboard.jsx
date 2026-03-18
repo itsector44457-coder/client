@@ -10,7 +10,7 @@ import ZenMode from "../Dashboard/ZenMode";
 import QuickCaptureModal from "../Dashboard/QuickCaptureModal";
 import StudyTimer from "./StudyTimer";
 import BattleRequestModal from "../Battle/BattleRequestModal";
-import GlobalScratchpad from "../flashcards/GlobalScratchpad"; // ✅ NEW
+import GlobalScratchpad from "../flashcards/GlobalScratchpad";
 
 const socket = io(`https://backend-6hhv.onrender.com`);
 
@@ -62,7 +62,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
   const [todayDeepSeconds, setTodayDeepSeconds] = useState(
     userData?.todayDeepSeconds || 0,
   );
-
   const [activeBattle, setActiveBattle] = useState(null);
   const [incomingChallenge, setIncomingChallenge] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -161,12 +160,9 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
 
   return (
     <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900 font-sans">
-      {/* SIDEBAR */}
       <Sidebar setZenMode={setZenMode} onLogout={onLogout} />
 
-      {/* MAIN CONTENT */}
       <div className="flex flex-col flex-1 w-full min-w-0 overflow-hidden relative">
-        {/* TOPBAR */}
         <Topbar
           currentUserName={userData.name || "Commander"}
           myField={myField}
@@ -184,7 +180,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
           onCheckIn={handleDailyCheckIn}
         />
 
-        {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 pb-24 md:pb-8 scroll-smooth no-scrollbar">
           {location.pathname === "/dashboard" && (
             <div className="mb-5 sm:mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -212,8 +207,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
           </div>
         </main>
       </div>
-
-      {/* ── GLOBAL MODALS & OVERLAYS ── */}
 
       <BattleRequestModal
         request={incomingChallenge}
@@ -257,8 +250,6 @@ const Dashboard = ({ theme, onSetTheme, themeOptions, onLogout }) => {
         isOpen={quickCaptureOpen}
         onClose={() => setQuickCaptureOpen(false)}
       />
-
-      {/* ✅ GLOBAL SCRATCHPAD — floating button har page pe */}
       <GlobalScratchpad />
     </div>
   );
