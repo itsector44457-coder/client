@@ -111,7 +111,6 @@ const SessionModal = ({ session, onClose }) => {
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
-        position: "fixed",
         inset: 0,
         zIndex: 200,
         background: "rgba(0,0,0,0.72)",
