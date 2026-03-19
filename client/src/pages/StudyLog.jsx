@@ -113,6 +113,7 @@ const SessionModal = ({ session, onClose }) => {
       style={{
         inset: 0,
         zIndex: 200,
+        position: "fixed",
         background: "rgba(0,0,0,0.72)",
         backdropFilter: "blur(8px)",
         display: "flex",
